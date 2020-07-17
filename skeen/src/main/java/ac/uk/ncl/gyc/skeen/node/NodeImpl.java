@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 import ac.uk.ncl.gyc.skeen.StateMachine.StateMachine;
 import ac.uk.ncl.gyc.skeen.StateMachine.StateMachineImpl;
@@ -38,6 +39,8 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
  	/* ============ Base ============= */
 
     public volatile long logicClock = 0;
+
+    public volatile long cur_index = 0;
 
     public static long SYSTEM_START_TIME = System.currentTimeMillis();
 
@@ -80,6 +83,8 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
     public LogModule logModule;
 
     public StateMachine stateMachine;
+
+    public ReentrantLock lock = new ReentrantLock();
 
 
     private NodeImpl() {
@@ -169,42 +174,72 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         long RUN_TIME = System.currentTimeMillis() - SYSTEM_START_TIME;
         long req_index = RUN_TIME / 2;
 
+        System.out.println("cur_time" + req_index );
+
+
         CopyOnWriteArrayList<PiggybackingLog> req_list = null;
-
-
-        if(REQUEST_LIST.get(req_index)!=null){
-            piggybackingLog.setFirstIndex(true);
-            req_list = REQUEST_LIST.get(req_index);
-            req_list.add(piggybackingLog);
-            REQUEST_LIST.put(req_index,req_list);
-        }else{
-            req_list = new CopyOnWriteArrayList();
-            req_list.add(piggybackingLog);
-            REQUEST_LIST.put(req_index,req_list);
-        }
-
-
-        //
-        if(req_index<=LAXT_INDEX.get()){
-          return ClientResponse.ok();
-        }
-
-        req_list = REQUEST_LIST.get(LAXT_INDEX.get());
-
-        REQUEST_LIST.remove(LAXT_INDEX.get());
-        LAXT_INDEX.set(req_index);
-
         PiggybackingLog firstPiggy = null;
-        for(PiggybackingLog p : req_list){
-            if(p.isFirstIndex()){
-                firstPiggy = p;
-            }
-        }
+//lock.lock();
+//try{
+    if(REQUEST_LIST.get(req_index)!=null){
+        System.out.println("cur_req" + request.getKey()+" is  not first p" );
+        req_list = REQUEST_LIST.get(req_index);
+        req_list.add(piggybackingLog);
+        REQUEST_LIST.put(req_index,req_list);
+    }else{
+        System.out.println("cur_req" + request.getKey()+" is first p          req_index"+ req_index );
+        piggybackingLog.setFirstIndex(true);
+        req_list = new CopyOnWriteArrayList();
+        req_list.add(piggybackingLog);
+        REQUEST_LIST.put(req_index,req_list);
+    }
 
-        long ts = logicClock;
-        received.put(firstPiggy.getMessage(), ts);
+    System.out.println("last_index   " + LAXT_INDEX.get() );
+//        System.out.println("last_index   " + cur_index );
+
+
+
+    if(req_index<=LAXT_INDEX.get()){
+        System.out.println("return 1111111 size" );
+        return ClientResponse.ok();
+    }
+
+    long last_index = LAXT_INDEX.get();
+
+    LAXT_INDEX.getAndSet(req_index);
+    if(last_index == 0){
+        System.out.println("return 3333333 size" );
+
+//        cur_index = req_index;
+        return ClientResponse.ok();
+    }
+
+    if(REQUEST_LIST.get(last_index)==null){
+        System.out.println("return 2222222 size" );
+        return ClientResponse.ok();
+    }else{
+        req_list = REQUEST_LIST.get(last_index);
+    }
+
+    REQUEST_LIST.remove(last_index);
+
+    System.out.println("req_list size" + req_list.size());
+    for(PiggybackingLog p : req_list){
+        if(p.isFirstIndex()){
+            firstPiggy = p;
+        }
+    }
+
+    System.out.println("FIST PPP " + firstPiggy.getMessage());
+
+    long ts = logicClock;
+    received.put(firstPiggy.getMessage(), ts);
 //        extraM.put(request.getKey(),new AtomicInteger(0));
-        latency_temp.put(firstPiggy.getMessage(),new CopyOnWriteArrayList<>());
+    latency_temp.put(firstPiggy.getMessage(),new CopyOnWriteArrayList<>());
+//}finally {
+//   lock.unlock();
+//}
+
 
         List<Long> lcList = new CopyOnWriteArrayList<>();
         lcList.add(logicClock);
@@ -340,7 +375,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                 long start = System.currentTimeMillis(), end = start;
 
                 // 20 秒重试时间
-                while (end - start < 20 * 1000L) {
+//                while (end - start < 20 * 1000L) {
                     LogEntry firstLog = null;
                     for(LogEntry l : LogEntries ){
                         if(l.isFirst_index()){
@@ -404,11 +439,11 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                         end = System.currentTimeMillis();
 
                     } catch (Exception e) {
-                        continue;
+e.printStackTrace();
 
                     }
 
-                }
+
 
                 return false;
 
