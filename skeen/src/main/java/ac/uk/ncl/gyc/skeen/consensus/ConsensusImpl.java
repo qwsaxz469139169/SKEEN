@@ -49,7 +49,15 @@ public class ConsensusImpl implements Consensus {
             System.out.println("Receive Logic time: " + lcSendRequest);
 
             long ts = lcSendRequest.getTs();
-            LogEntry logEntry = lcSendRequest.getLogEntry();
+            LogEntry logEntry = null;
+            List<LogEntry> logEntries = lcSendRequest.getLogEntries();
+            for(LogEntry l : logEntries ){
+                if(l.isFirst_index()){
+                    logEntry = l;
+                }
+            }
+
+
             String key = logEntry.getMessage();
 
             node.logicClock = node.logicClock + 1;
@@ -66,9 +74,9 @@ public class ConsensusImpl implements Consensus {
                 System.out.println("second receive message: " + key);
             }
 
-            if(node.extraM.get(key)==null){
-                node.extraM.put(key, new AtomicInteger(0));
-            }
+//            if(node.extraM.get(key)==null){
+//                node.extraM.put(key, new AtomicInteger(0));
+//            }
 
 
             if(node.lcMap.get(key)==null){
@@ -84,7 +92,7 @@ public class ConsensusImpl implements Consensus {
 
 
                 node.received.put(key, node.logicClock);
-                node.extraM.put(key, new AtomicInteger(0));
+//                node.extraM.put(key, new AtomicInteger(0));
 
                 List<Long> lcList = new ArrayList<>();
                 lcList.add(node.logicClock);
@@ -108,7 +116,7 @@ public class ConsensusImpl implements Consensus {
 
                     InitialTaskRequest initialTaskRequest = new InitialTaskRequest();
                     initialTaskRequest.setServerId(node.nodes.getSelf().getAddress());
-                    initialTaskRequest.setLogEntry(logEntry);
+                    initialTaskRequest.setLogEntries(logEntries);
                     initialTaskRequest.setTs(node.received.get(logEntry.getMessage()));
                     initialTaskRequest.setMessage(key);
 
@@ -132,9 +140,9 @@ public class ConsensusImpl implements Consensus {
 //                    request.setObj(lcRequest);
 //                    request.setUrl(add);
 
-                    AtomicInteger em = node.extraM.get(logEntry.getMessage());
-            em.incrementAndGet();
-                    node.extraM.put(logEntry.getMessage(), em);
+//                    AtomicInteger em = node.extraM.get(logEntry.getMessage());
+//            em.incrementAndGet();
+//                    node.extraM.put(logEntry.getMessage(), em);
 
                     Response response = node.SKEEN_RPC_CLIENT.send(request);
 
@@ -170,22 +178,25 @@ public class ConsensusImpl implements Consensus {
 
                         node.lcMap.remove(key);
 
-                        node.logModule.write(logEntry);
+                        for(LogEntry l : logEntries){
+                            node.logModule.write(logEntry);
+                        }
 
 
 
-                        AtomicInteger e = node.extraM.get(logEntry.getMessage());
-                        e.incrementAndGet();
-                        node.extraM.put(logEntry.getMessage(), e );
+
+//                        AtomicInteger e = node.extraM.get(logEntry.getMessage());
+//                        e.incrementAndGet();
+//                        node.extraM.put(logEntry.getMessage(), e );
 
                         long latency = System.currentTimeMillis()- node.startTime.get(key);
-                        System.out.println("Commit success, latency: " + latency+", extra message: "+node.extraM.get(logEntry.getMessage()));
+                        System.out.println("Commit success, latency: " + latency+", extra message: ");
                         result.setLogicClock(node.received.get(key));
-                        result.setExtraM(node.extraM.get(key).get());
+//                        result.setExtraM(node.extraM.get(key).get());
                         result.setLatency(latency);
                         node.received.remove(key);
                         node.startTime.remove(key);
-                        node.extraM.remove(key);
+//                        node.extraM.remove(key);
                         node.stamped.remove(key);
 
                         result.setSuccess(true);
@@ -217,9 +228,9 @@ public class ConsensusImpl implements Consensus {
                 node.startTime.put(key, System.currentTimeMillis());
             }
 
-            if(node.extraM.get(key)==null){
-                node.extraM.put(key, new AtomicInteger());
-            }
+//            if(node.extraM.get(key)==null){
+//                node.extraM.put(key, new AtomicInteger());
+//            }
 
 
             if(node.lcMap.get(key)==null){

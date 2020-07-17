@@ -3,6 +3,7 @@ package ac.uk.ncl.gyc.skeen.entity;
 import ac.uk.ncl.gyc.skeen.logModule.LogEntry;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class LcSendRequest implements Serializable {
 
@@ -11,10 +12,20 @@ public class LcSendRequest implements Serializable {
 	String Message;
 
 	LogEntry logEntry;
+
+	List<LogEntry> LogEntries;
 	
 	String serverId;
 
 	public LcSendRequest() {
+	}
+
+	public List<LogEntry> getLogEntries() {
+		return LogEntries;
+	}
+
+	public void setLogEntries(List<LogEntry> logEntries) {
+		LogEntries = logEntries;
 	}
 
 	public long getTs() {

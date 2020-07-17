@@ -3,6 +3,7 @@ package ac.uk.ncl.gyc.skeen.entity;
 import ac.uk.ncl.gyc.skeen.logModule.LogEntry;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Created by GYC on 2020/6/29.
@@ -13,10 +14,19 @@ public class InitialTaskRequest implements Serializable {
 
     LogEntry logEntry;
 
+    List<LogEntry> logEntries;
+
     long ts;
 
     String message;
 
+    public List<LogEntry> getLogEntries() {
+        return logEntries;
+    }
+
+    public void setLogEntries(List<LogEntry> logEntries) {
+        this.logEntries = logEntries;
+    }
 
     public String getServerId() {
         return serverId;

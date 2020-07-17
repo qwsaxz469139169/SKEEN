@@ -17,9 +17,19 @@ public class LogEntry implements Serializable, Comparable {
 
     private int extraMessages;
 
+    private boolean first_index;
+
     private Command command;
 
     public LogEntry() {
+    }
+
+    public boolean isFirst_index() {
+        return first_index;
+    }
+
+    public void setFirst_index(boolean first_index) {
+        this.first_index = first_index;
     }
 
     public int getExtraMessages() {

@@ -1,6 +1,7 @@
 package ac.uk.ncl.gyc.skeen.client;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class ClientResponse implements Serializable {
 
@@ -12,12 +13,23 @@ public class ClientResponse implements Serializable {
 
     Long Latency;
 
+    List<String> requests;
+
     @Override
     public String toString() {
         return "ClientResponse{" +
                 "result=" + result +
                 "success="+success+
                 '}';
+    }
+
+
+    public List<String> getRequests() {
+        return requests;
+    }
+
+    public void setRequests(List<String> requests) {
+        this.requests = requests;
     }
 
     public ClientResponse(Object result) {
