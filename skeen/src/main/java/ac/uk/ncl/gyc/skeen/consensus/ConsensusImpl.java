@@ -37,13 +37,14 @@ public class ConsensusImpl implements Consensus {
     }
 
     @Override
-    public LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) {
+    public synchronized LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) {
         LcSendResponse result = new LcSendResponse();
         result.setSuccess(false);
 
-        if (!lock.tryLock()) {
-            return result;
-        }
+//        if (!lock.tryLock()) {
+//            System.out.println( "tryLock" + lcSendRequest);
+//            return result;
+//        }
 
         try {
             System.out.println("Receive Logic time: " + lcSendRequest);
@@ -205,7 +206,7 @@ public class ConsensusImpl implements Consensus {
 
             return result;
         }finally {
-            lock.unlock();
+//            lock.unlock();
         }
     }
 

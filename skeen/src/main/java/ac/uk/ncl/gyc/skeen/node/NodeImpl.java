@@ -401,16 +401,16 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 //                        em.incrementAndGet();
 //                        extraM.put(logEntry.getMessage(),em);
 
-                        System.out.println("Current node send ack to other node : "+peer.getAddress());
+                        System.out.println(firstLog.getMessage()+"---Current node send ack to other node : "+peer.getAddress());
 
                         if (response == null) {
-                            LOGGER.info("send to "+peer.getAddress()+" fail");
+                            LOGGER.info(firstLog.getMessage()+"---send to "+peer.getAddress()+" fail");
                             return false;
                         }
 
                         LcSendResponse result = (LcSendResponse) response.getResult();
                         if (result != null && result.isSuccess()) {
-                            LOGGER.info("send to "+peer.getAddress()+" successful");
+                            LOGGER.info(firstLog.getMessage()+"---send to "+peer.getAddress()+" successful");
 
 //                            receive event lc = max+1
                             if(result.getLogicClock()>logicClock){

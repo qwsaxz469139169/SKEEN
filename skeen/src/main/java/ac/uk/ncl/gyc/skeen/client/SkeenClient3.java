@@ -21,9 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PiggySkeenClient {
+public class SkeenClient3 {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PiggySkeenClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SkeenClient3.class);
 
     private final static SkeenRpcClient client = new SkeenRpcClientImpl();
 
@@ -32,7 +32,7 @@ public class PiggySkeenClient {
     private static List<Message> messages = new ArrayList<Message>();
 
    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    //static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
+//    static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
@@ -70,8 +70,8 @@ public class PiggySkeenClient {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-//       for(int j =0; j<5; j++){
-            for(int i=0;i<3;i++){
+        for(int j =0; j<1200; j++){
+            for(int i=0;i<5;i++){
                 message = message+1;
                 int m = message;
                 int index = (int) (count.incrementAndGet() % nodeList.size());
@@ -80,7 +80,7 @@ public class PiggySkeenClient {
                     @Override
                     public void run() {
                         String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client3:"+m).value("world:").type(ClientRequest.PUT).build();
+                        ClientRequest obj = ClientRequest.newBuilder().key("client1:"+m).value("world:").type(ClientRequest.PUT).build();
 
                         Request<ClientRequest> r = new Request<>();
                         r.setObj(obj);
@@ -92,16 +92,7 @@ public class PiggySkeenClient {
                         try {
                             response = client.send(r);
                             ClientResponse clientResponse = response.getResult();
-
-                            if(response.getResult().getLatency()!=null){
-                                System.out.println("message: " + obj.key +" has been sent"  );
-
-                                for(String mmmmm : response.getResult().getRequests()){
-                                    System.out.println("message: " + mmmmm+", latency: " + response.getResult().getLatency());
-                                }
-                            }else{
-                                System.out.println("message: " + obj.key +" has been sent"  );
-                            }
+                            System.out.println("message: " + obj.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
 //                            JSONObject mes=new JSONObject();
 //                            mes.put("name",key);
 //                            mes.put("latency", response.getResult().getLatency());
@@ -116,21 +107,21 @@ public class PiggySkeenClient {
                 });
             }
             Thread.sleep(1000);
+        }
+//        String s = JSON.toJSONString(messages);
+//        FileWriter fw = null;
+//        File f = new File("D:/skeen_1.txt");
+//        try {
+//            if(!f.exists()){
+//                f.createNewFile();
+//            }
+//            fw = new FileWriter(f);
+//            BufferedWriter out = new BufferedWriter(fw);
+//            out.write(s, 0, s.length()-1);
+//            out.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
 //        }
-/*        String s = JSON.toJSONString(messages);
-        FileWriter fw = null;
-        File f = new File("D:/skeen_1.txt");
-        try {
-            if(!f.exists()){
-                f.createNewFile();
-            }
-            fw = new FileWriter(f);
-            BufferedWriter out = new BufferedWriter(fw);
-            out.write(s, 0, s.length()-1);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
         System.out.println("end");
        }
 
