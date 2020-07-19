@@ -6,6 +6,6 @@ public interface SkeenRpcServer {
 
     void stop();
 
-    Response handlerRequest(Request request);
+    Response handlerRequest(Request request) throws InterruptedException;
 
 }

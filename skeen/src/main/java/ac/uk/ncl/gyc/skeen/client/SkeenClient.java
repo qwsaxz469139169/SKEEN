@@ -102,8 +102,8 @@ public class SkeenClient {
 //                            mes.put("latency", response.getResult().getLatency());
 //                            mes.put("extraM", response.getResult().getExtraMessage());
 //                            jsonArray.add(mes);
-                            Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
-                            messages.add(message1);
+//                            Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
+//                            messages.add(message1);
                         } catch (Exception e) {
 
                         }

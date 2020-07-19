@@ -8,7 +8,7 @@ import ac.uk.ncl.gyc.skeen.entity.LcSendResponse;
 
 public interface Consensus {
 
-    LcSendResponse sendLogicTime(LcSendRequest lcSendRequest);
+    LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) throws InterruptedException;
 
     InitialTaskResponse InitialTask(InitialTaskRequest request);
 }

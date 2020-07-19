@@ -243,7 +243,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
         List<Long> lcList = new CopyOnWriteArrayList<>();
         lcList.add(logicClock);
-        lcMap.put(request.getKey(),lcList);
+        lcMap.put(firstPiggy.getMessage(),lcList);
 
         List<LogEntry> logEntries = new ArrayList<>();
         for(PiggybackingLog p : req_list){
@@ -267,7 +267,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 //        logModule.write(logEntry);
 //        System.out.println("Current precommit to log module.");
 
-        System.out.println("Start send logic time of the message to other node.");
+        System.out.println(firstPiggy.getMessage()+"---Start send logic time of the message to other node.");
 
 //        int count = 0;
 
@@ -304,7 +304,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
         //  响应客户端(成功一半)
         if (success.get()==count) {
-            System.out.println("Receive success! Response Client.");
+            System.out.println(firstPiggy.getMessage()+"---Receive success! Response Client.");
 
             List<Long> maxList = lcMap.get(firstPiggy.getMessage());
             long snM = 0;
@@ -326,14 +326,14 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             stamped.remove(firstPiggy.getMessage());
 
             long _latency = System.currentTimeMillis()- firstPiggy.getStartTime();
-            System.out.println("latency la: ."+_latency);
+
             for(long la:latency_temp.get(firstPiggy.getMessage())){
-                System.out.println("latency la: ."+la);
+
                 _latency=_latency+la;
             }
 
             _latency= _latency/3;
-
+            System.out.println(firstPiggy.getMessage()+"---latency la: ."+_latency);
             logicClock++;
             ClientResponse clientResponse = new ClientResponse(true);
             clientResponse.setExtraMessage(6);
@@ -452,7 +452,7 @@ e.printStackTrace();
     }
 
     @Override
-    public LcSendResponse handlerSendLcRequest(LcSendRequest request) {
+    public LcSendResponse handlerSendLcRequest(LcSendRequest request) throws InterruptedException {
         LOGGER.warn("handlerRequestVote will be invoke, request info : {}", request);
         return consensus.sendLogicTime(request);
     }

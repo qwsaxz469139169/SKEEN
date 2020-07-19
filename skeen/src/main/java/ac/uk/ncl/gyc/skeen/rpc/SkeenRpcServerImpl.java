@@ -57,7 +57,7 @@ public class SkeenRpcServerImpl implements SkeenRpcServer {
     }
 
     @Override
-    public Response handlerRequest(Request request) {
+    public Response handlerRequest(Request request) throws InterruptedException {
         System.out.println("handlerRequest method param: "+ request.getObj());
         if (request.getCmd() == Request.REQ_SEND_LC) {
             return new Response(node.handlerSendLcRequest((LcSendRequest) request.getObj()));

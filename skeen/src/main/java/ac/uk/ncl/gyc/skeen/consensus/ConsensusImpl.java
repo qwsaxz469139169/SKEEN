@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,14 +38,14 @@ public class ConsensusImpl implements Consensus {
     }
 
     @Override
-    public synchronized LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) {
+    public  LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) throws InterruptedException {
         LcSendResponse result = new LcSendResponse();
         result.setSuccess(false);
 
-//        if (!lock.tryLock()) {
-//            System.out.println( "tryLock" + lcSendRequest);
-//            return result;
-//        }
+        if (!lock.tryLock(10,TimeUnit.SECONDS)){
+            System.out.println( "tryLock" + lcSendRequest);
+           return result;
+       }
 
         try {
             System.out.println("Receive Logic time: " + lcSendRequest);
@@ -95,14 +96,13 @@ public class ConsensusImpl implements Consensus {
                 node.received.put(key, node.logicClock);
 //                node.extraM.put(key, new AtomicInteger(0));
 
-                List<Long> lcList = new ArrayList<>();
-                lcList.add(node.logicClock);
-                lcList.add(logEntry.getLogic_clock());
-                node.lcMap.put(key, lcList);
+//                List<Long> lcList = new ArrayList<>();
+//                lcList.add(node.logicClock);
+//                lcList.add(logEntry.getLogic_clock());
+//                node.lcMap.put(key, lcList);
 
                 //如果是初始节点发过来的消息，需要请求其他节点的承认
-                System.out.println("初始节点： "+logEntry.getInitialNode());
-                System.out.println("lcSendRequest.getServerId()： "+lcSendRequest.getServerId());
+                System.out.println(logEntry.getMessage()+"---初始节点： "+logEntry.getInitialNode());
 
 
                     String add = "";
@@ -126,34 +126,17 @@ public class ConsensusImpl implements Consensus {
                     request.setCmd(Request.REQ_INI_TASK);
                     request.setObj(initialTaskRequest);
                     request.setUrl(add);
-//
 
-
-//                    LcSendRequest lcRequest = new LcSendRequest();
-//                    lcRequest.setServerId(node.nodes.getSelf().getAddress());
-//                    lcRequest.setLogEntry(logEntry);
-//                    lcRequest.setTs(node.received.get(logEntry.getMessage()));
-//                    lcRequest.setMessage(logEntry.getMessage());
-//
-//
-//                    Request request = new Request();
-//                    request.setCmd(Request.REQ_SEND_LC);
-//                    request.setObj(lcRequest);
-//                    request.setUrl(add);
-
-//                    AtomicInteger em = node.extraM.get(logEntry.getMessage());
-//            em.incrementAndGet();
-//                    node.extraM.put(logEntry.getMessage(), em);
 
                     Response response = node.SKEEN_RPC_CLIENT.send(request);
 
 
-                    System.out.println("Current node send ack to other node : " + add);
+                    System.out.println(logEntry.getMessage()+"---(not ini) Current node send ack to other node : " + add);
 
 
                 InitialTaskResponse lcResponse = (InitialTaskResponse) response.getResult();
                     if (lcResponse != null && lcResponse.isSuccess()) {
-                        LOGGER.info("send to " + add + " successful");
+                        LOGGER.info(logEntry.getMessage()+"---(not ini) send to " + add + " successful");
 
 //                            receive event lc = max+1
                         if (lcResponse.getLogicClock() > node.logicClock) {
@@ -191,7 +174,11 @@ public class ConsensusImpl implements Consensus {
 //                        node.extraM.put(logEntry.getMessage(), e );
 
                         long latency = System.currentTimeMillis()- node.startTime.get(key);
-                        System.out.println("Commit success, latency: " + latency+", extra message: ");
+
+                        System.out.println(logEntry.getMessage()+"---(not ini) Commit success, latency: " + latency+", extra message: ");
+                        System.out.println(logEntry.getMessage()+"---(logic clock: " + node.received.get(key));
+                        System.out.println(logEntry.getMessage()+"---(not ini) logic clock: " + latency);;
+
                         result.setLogicClock(node.received.get(key));
 //                        result.setExtraM(node.extraM.get(key).get());
                         result.setLatency(latency);
@@ -206,7 +193,7 @@ public class ConsensusImpl implements Consensus {
 
             return result;
         }finally {
-//            lock.unlock();
+            lock.unlock();
         }
     }
 

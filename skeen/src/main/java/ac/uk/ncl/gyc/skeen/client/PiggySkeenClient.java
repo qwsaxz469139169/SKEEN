@@ -70,8 +70,8 @@ public class PiggySkeenClient {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-//       for(int j =0; j<5; j++){
-            for(int i=0;i<3;i++){
+      for(int j =0; j<6; j++){
+            for(int i=0;i<15;i++){
                 message = message+1;
                 int m = message;
                 int index = (int) (count.incrementAndGet() % nodeList.size());
@@ -80,7 +80,7 @@ public class PiggySkeenClient {
                     @Override
                     public void run() {
                         String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client3:"+m).value("world:").type(ClientRequest.PUT).build();
+                        ClientRequest obj = ClientRequest.newBuilder().key("client555:"+m).value("world:").type(ClientRequest.PUT).build();
 
                         Request<ClientRequest> r = new Request<>();
                         r.setObj(obj);
@@ -93,12 +93,23 @@ public class PiggySkeenClient {
                             response = client.send(r);
                             ClientResponse clientResponse = response.getResult();
 
+//                            String[] mess = {};
+//                            List<ReMes> m1 = new ArrayList<>();
                             if(response.getResult().getLatency()!=null){
                                 System.out.println("message: " + obj.key +" has been sent"  );
 
+                                int con = 0;
                                 for(String mmmmm : response.getResult().getRequests()){
+//                                    ReMes reMes = new ReMes(mmmmm);
+//                                    m1.add(reMes);
+                                    con++;
                                     System.out.println("message: " + mmmmm+", latency: " + response.getResult().getLatency());
                                 }
+
+                                Message message1 = new Message(con, 6, response.getResult().getLatency());
+
+                                messages.add(message1);
+                                jsonArray.add(message1);
                             }else{
                                 System.out.println("message: " + obj.key +" has been sent"  );
                             }
@@ -107,8 +118,8 @@ public class PiggySkeenClient {
 //                            mes.put("latency", response.getResult().getLatency());
 //                            mes.put("extraM", response.getResult().getExtraMessage());
 //                            jsonArray.add(mes);
-                            Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
-                            messages.add(message1);
+//                            JSONArray array= JSONArray.parseArray(JSON.toJSONString(mess));
+
                         } catch (Exception e) {
 
                         }
@@ -116,10 +127,10 @@ public class PiggySkeenClient {
                 });
             }
             Thread.sleep(1000);
-//        }
-/*        String s = JSON.toJSONString(messages);
+       }
+        String s = JSON.toJSONString(messages);
         FileWriter fw = null;
-        File f = new File("D:/skeen_1.txt");
+        File f = new File("D:/piggy_skeen_8.txt");
         try {
             if(!f.exists()){
                 f.createNewFile();
@@ -130,7 +141,7 @@ public class PiggySkeenClient {
             out.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
         System.out.println("end");
        }
 

@@ -24,6 +24,6 @@ public interface Node<T> extends LifeCycle{
     ClientResponse handlerClientRequest(ClientRequest request);
 
 
-    LcSendResponse handlerSendLcRequest(LcSendRequest request);
+    LcSendResponse handlerSendLcRequest(LcSendRequest request) throws InterruptedException;
 
 }

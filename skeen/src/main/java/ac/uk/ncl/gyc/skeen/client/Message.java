@@ -2,13 +2,15 @@ package ac.uk.ncl.gyc.skeen.client;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
+import java.util.List;
+
 /**
  * Created by GYC on 2020/7/5.
  */
 public class Message {
 
-    @JSONField(name = "message")
-    private String message;
+   @JSONField(name = "message")
+    private int messages;
 
     @JSONField(name = "extra_message")
     private int extra_message;
@@ -16,18 +18,18 @@ public class Message {
     @JSONField(name = "latency")
     private long latency;
 
-    public Message(String message, int extra_message, long latency) {
-        this.message = message;
+    public Message(int messages, int extra_message, long latency) {
+        this.messages = messages;
         this.extra_message = extra_message;
         this.latency = latency;
     }
 
-    public String getMessage() {
-        return message;
+    public int getMessages() {
+        return messages;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setMessages( int messages) {
+        this.messages = messages;
     }
 
     public int getExtra_message() {
@@ -44,5 +46,14 @@ public class Message {
 
     public void setLatency(long latency) {
         this.latency = latency;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "messages=" + messages +
+                ", extra_message=" + extra_message +
+                ", latency=" + latency +
+                '}';
     }
 }
