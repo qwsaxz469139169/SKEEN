@@ -70,7 +70,7 @@ public class PiggySkeenClient {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-      for(int j =0; j<6; j++){
+      for(int j =0; j<1205; j++){
             for(int i=0;i<15;i++){
                 message = message+1;
                 int m = message;
