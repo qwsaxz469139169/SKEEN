@@ -40,6 +40,7 @@ public class ConsensusImpl implements Consensus {
     public LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) {
         LcSendResponse result = new LcSendResponse();
         result.setSuccess(false);
+        long receiveTime = System.currentTimeMillis();
 
         if (!lock.tryLock()) {
             return result;
@@ -61,7 +62,7 @@ public class ConsensusImpl implements Consensus {
             if(node.received.get(key)==null){
                 System.out.println("First receive message: " + key);
                 node.received.put(key, node.logicClock);
-                node.startTime.put(key, System.currentTimeMillis());
+                node.startTime.put(key, receiveTime);
             }else {
                 System.out.println("second receive message: " + key);
             }
@@ -201,7 +202,7 @@ public class ConsensusImpl implements Consensus {
 
     @Override
     public InitialTaskResponse InitialTask(InitialTaskRequest request) {
-
+        long receiveTime = System.currentTimeMillis();
         InitialTaskResponse result = new InitialTaskResponse();
         result.setSuccess(false);
         if (!lock2.tryLock()) {
@@ -214,7 +215,7 @@ public class ConsensusImpl implements Consensus {
 
             if(node.received.get(key)==null){
                 node.received.put(key, node.logicClock);
-                node.startTime.put(key, System.currentTimeMillis());
+                node.startTime.put(key, receiveTime);
             }
 
             if(node.extraM.get(key)==null){

@@ -21,7 +21,7 @@ public interface Node<T> extends LifeCycle{
      * @param request
      * @return
      */
-    ClientResponse handlerClientRequest(ClientRequest request);
+    ClientResponse handlerClientRequest(ClientRequest request,long receiveTime);
 
 
     LcSendResponse handlerSendLcRequest(LcSendRequest request);

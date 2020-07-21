@@ -141,7 +141,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
      * @return
      */
     @Override
-    public synchronized ClientResponse handlerClientRequest(ClientRequest request) {
+    public synchronized ClientResponse handlerClientRequest(ClientRequest request,long receiveTime) {
 
         LOGGER.warn("handlerClientRequest handler {} operation, Key : [{}], Value : [{}].", request.getKey(),request.getValue());
 
@@ -171,7 +171,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         logEntry.setInitialNode(nodes.getSelf().getAddress());
         logEntry.setMessage(request.getKey());
         logEntry.setLogic_clock(logicClock);
-        logEntry.setStartTime(System.currentTimeMillis());
+        logEntry.setStartTime(receiveTime);
 
 
 //        logModule.write(logEntry);
