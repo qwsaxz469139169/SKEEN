@@ -31,8 +31,8 @@ public class PiggySkeenClient {
 
     private static List<Message> messages = new ArrayList<Message>();
 
-   static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    //static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
+   //static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
+    static List<String> nodeList = Lists.newArrayList("100.70.48.24:8775","100.70.49.81:8776","100.70.49.64:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
@@ -70,7 +70,7 @@ public class PiggySkeenClient {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-      for(int j =0; j<1205; j++){
+      for(int j =0; j<605; j++){
             for(int i=0;i<15;i++){
                 message = message+1;
                 int m = message;
@@ -80,7 +80,7 @@ public class PiggySkeenClient {
                     @Override
                     public void run() {
                         String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client555:"+m).value("world:").type(ClientRequest.PUT).build();
+                        ClientRequest obj = ClientRequest.newBuilder().key("client1:"+m).value("world:").type(ClientRequest.PUT).build();
 
                         Request<ClientRequest> r = new Request<>();
                         r.setObj(obj);
@@ -130,7 +130,7 @@ public class PiggySkeenClient {
        }
         String s = JSON.toJSONString(messages);
         FileWriter fw = null;
-        File f = new File("D:/piggy_skeen_8.txt");
+        File f = new File("D:/15_skeen_1.txt");
         try {
             if(!f.exists()){
                 f.createNewFile();

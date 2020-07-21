@@ -134,7 +134,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             PeerNode peer = new PeerNode(s);
             nodes.addPeer(peer);
             
-            if (s.equals("localhost:" + config.getSelfPort())) {
+            if (s.equals("100.70.48.24:" + config.getSelfPort())) {
                 nodes.setSelf(peer);
             }
         }
@@ -153,7 +153,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
      * @return
      */
     @Override
-    public synchronized ClientResponse handlerClientRequest(ClientRequest request) {
+    public synchronized ClientResponse handlerClientRequest(ClientRequest request,long receiveTime) {
 
         LOGGER.warn("handlerClientRequest handler {} operation, Key : [{}], Value : [{}].", request.getKey(),request.getValue());
 
@@ -168,10 +168,10 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
         PiggybackingLog piggybackingLog = new PiggybackingLog();
         piggybackingLog.setMessage(request.getKey());
-        piggybackingLog.setStartTime(System.currentTimeMillis());
+        piggybackingLog.setStartTime(receiveTime);
 
 
-        long RUN_TIME = System.currentTimeMillis() - SYSTEM_START_TIME;
+        long RUN_TIME = receiveTime - SYSTEM_START_TIME;
         long req_index = RUN_TIME / 2;
 
         System.out.println("cur_time" + req_index );
