@@ -1,6 +1,8 @@
 package ac.uk.ncl.gyc.skeen.client;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ClientResponse implements Serializable {
 
@@ -10,6 +12,8 @@ public class ClientResponse implements Serializable {
 
     int extraMessage;
 
+    Map<String,Long> messages ;
+
     Long Latency;
 
     @Override
@@ -18,6 +22,14 @@ public class ClientResponse implements Serializable {
                 "result=" + result +
                 "success="+success+
                 '}';
+    }
+
+    public Map<String, Long> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Map<String, Long> messages) {
+        this.messages = messages;
     }
 
     public ClientResponse(Object result) {

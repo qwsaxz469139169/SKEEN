@@ -1,6 +1,8 @@
 package ac.uk.ncl.gyc.skeen.logModule;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class LogEntry implements Serializable, Comparable {
@@ -17,9 +19,38 @@ public class LogEntry implements Serializable, Comparable {
 
     private int extraMessages;
 
+    private List<String> pendings;
+
+    private Map<String,Long> commits;
+    private Map<String,Long> res_commits;
+
     private Command command;
 
     public LogEntry() {
+    }
+
+    public Map<String, Long> getRes_commits() {
+        return res_commits;
+    }
+
+    public void setRes_commits(Map<String, Long> res_commits) {
+        this.res_commits = res_commits;
+    }
+
+    public  Map<String,Long> getCommits() {
+        return commits;
+    }
+
+    public void setCommits( Map<String,Long> commits) {
+        this.commits = commits;
+    }
+
+    public List<String> getPendings() {
+        return pendings;
+    }
+
+    public void setPendings(List<String> pendings) {
+        this.pendings = pendings;
     }
 
     public int getExtraMessages() {

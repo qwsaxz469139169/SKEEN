@@ -1,33 +1,24 @@
 package ac.uk.ncl.gyc.skeen.client;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import ac.uk.ncl.gyc.skeen.current.SkeenThreadPool;
-import ac.uk.ncl.gyc.skeen.exception.SkeenRemotingException;
-import com.alibaba.fastjson.JSON;
+import ac.uk.ncl.gyc.skeen.rpc.Request;
+import ac.uk.ncl.gyc.skeen.rpc.Response;
+import ac.uk.ncl.gyc.skeen.rpc.SkeenRpcClient;
+import ac.uk.ncl.gyc.skeen.rpc.SkeenRpcClientImpl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.remoting.exception.RemotingException;
 import com.google.common.collect.Lists;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ac.uk.ncl.gyc.skeen.rpc.SkeenRpcClientImpl;
-import ac.uk.ncl.gyc.skeen.rpc.Request;
-import ac.uk.ncl.gyc.skeen.rpc.Response;
-import ac.uk.ncl.gyc.skeen.rpc.SkeenRpcClient;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+public class SkeenClientTest {
 
-public class SkeenClient {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SkeenClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SkeenClientTest.class);
 
     private final static SkeenRpcClient client = new SkeenRpcClientImpl();
 
@@ -36,7 +27,7 @@ public class SkeenClient {
     private static List<Message> messages = new ArrayList<Message>();
 
    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    //static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
+//    static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
@@ -74,8 +65,8 @@ public class SkeenClient {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-        for(int j =0; j<10; j++){
-            for(int i=0;i<150;i++){
+
+            for(int i=0;i<3;i++){
                 message = message+1;
                 int m = message;
                 int index = (int) (count.incrementAndGet() % nodeList.size());
@@ -84,7 +75,7 @@ public class SkeenClient {
                     @Override
                     public void run() {
                         String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client1:"+m).value("world:").type(ClientRequest.PUT).build();
+                        ClientRequest obj = ClientRequest.newBuilder().key("client4:"+m).value("world:").type(ClientRequest.PUT).build();
 
                         Request<ClientRequest> r = new Request<>();
                         r.setObj(obj);
@@ -119,7 +110,7 @@ public class SkeenClient {
                 });
             }
             Thread.sleep(1000);
-        }
+
 //        String s = JSON.toJSONString(messages);
 //        FileWriter fw = null;
 //        File f = new File("D:/pigg_skeen_1.txt");

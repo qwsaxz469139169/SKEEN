@@ -1,6 +1,7 @@
 package ac.uk.ncl.gyc.skeen.node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -46,14 +47,17 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
     public static Map<String,Long> stamped = new ConcurrentHashMap();
 
-    public static Map<String,Long> latency = new ConcurrentHashMap();
+    public static List<String> pending = new CopyOnWriteArrayList<>();
+    public static Map<String,Integer> acks = new ConcurrentHashMap();
+    public static Map<String,Long> commits = new ConcurrentHashMap();
+
+    public static Map<String,Long> commit_response = new ConcurrentHashMap();
 
     public static Map<String,List<Long>> lcMap= new ConcurrentHashMap();
 
     public static Map<String,List<Long>> latency_temp = new ConcurrentHashMap();
 
 
-    public static ConcurrentHashMap<String,Integer> ack = new ConcurrentHashMap();
 
     /* ============ Node ============= */
     public NodesConfigration setting;
@@ -156,14 +160,51 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
         long ts = logicClock;
         received.put(request.getKey(), ts);
-        extraM.put(request.getKey(),new AtomicInteger(0));
         latency_temp.put(request.getKey(),new CopyOnWriteArrayList<>());
 
-        List<Long> lcList = new CopyOnWriteArrayList<>();
-        lcList.add(logicClock);
-        lcMap.put(request.getKey(),lcList);
+        startTime.put(request.getKey(),receiveTime);
+        acks.put(request.getKey(),0);
 
 
+        //
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("cur request ack size:" +pending.size());
+        List<String> ackList = new ArrayList<>();
+        if(pending.size()>0){
+
+            for(String mName: pending){
+                ackList.add(mName);
+                pending.remove(mName);
+            }
+        }
+        System.out.println("cur request commits size:" +commits.size());
+        Map<String,Long> commmitMap = new HashMap<>();
+        if(commits.size()>0){
+            for(Map.Entry<String, Long> entry : commits.entrySet()){
+                String mName = entry.getKey();
+                long mapValue = entry.getValue();
+                commmitMap.put(mName,mapValue);
+                commits.remove(mName);
+            }
+
+        }
+        System.out.println("cur request commmitMap size:" +commmitMap.size());
+        System.out.println("cur request commit_response size:" +commit_response.size());
+        Map<String,Long> response_com = new HashMap<>();
+
+        if(commit_response.size()>0){
+            for(Map.Entry<String, Long> entry : commit_response.entrySet()){
+                String mName = entry.getKey();
+                long mapValue = entry.getValue();
+                response_com.put(mName,mapValue);
+                commit_response.remove(mName);
+            }
+
+        }
 
 
         // 预提交到本地日志, TODO 预提交
@@ -172,6 +213,9 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         logEntry.setMessage(request.getKey());
         logEntry.setLogic_clock(logicClock);
         logEntry.setStartTime(receiveTime);
+        logEntry.setPendings(ackList);
+        logEntry.setCommits(commmitMap);
+        logEntry.setRes_commits(response_com);
 
 
 //        logModule.write(logEntry);
@@ -195,62 +239,28 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             // 并行发起 RPC 复制
             futureList.add(sendLC(peer, logEntry));
         }
-        CountDownLatch latch = new CountDownLatch(futureList.size());
-        List<Boolean> resultList = new CopyOnWriteArrayList<>();
-
-        getRPCSendLCResult(futureList, latch, resultList);
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        for (Boolean aBoolean : resultList) {
-            if (aBoolean) {
-                success.incrementAndGet();
-            }
-        }
 
         //  响应客户端(成功一半)
         if (success.get()==count) {
+
+        }
             System.out.println("Receive success! Response Client.");
 
-            List<Long> maxList = lcMap.get(request.getKey());
-            long snM = 0;
-            for (int i = 0; i<maxList.size();i++){
-                if(maxList.get(i)>snM){
-                    snM = maxList.get(i);
-                }
-            }
-            stamped.put(request.getKey(),snM);
-            received.remove(request.getKey());
-            lcMap.remove(request.getKey());
 
-            logModule.write(logEntry);
-            stamped.remove(request.getKey());
-
-            long _latency = System.currentTimeMillis()- logEntry.getStartTime();
-            System.out.println("latency la: ."+_latency);
-            for(long la:latency_temp.get(request.getKey())){
-                System.out.println("latency la: ."+la);
-                _latency=_latency+la;
-            }
-
-            _latency= _latency/3;
 
             logicClock++;
             ClientResponse clientResponse = new ClientResponse(true);
-            clientResponse.setExtraMessage(extraM.get(request.getKey()).get());
-            extraM.remove(request.getKey());
-            clientResponse.setLatency(_latency);
-            latency_temp.remove(request.getKey());
-            // 返回成功.
-            return clientResponse;
-        } else {
 
-            return ClientResponse.fail();
-        }
+            if(response_com.size()>0){
+                for(String mname :response_com.keySet()){
+                    System.out.println(mname + " all node has committed");
+                }
+                clientResponse.setMessages(response_com);
+            }
+
+            // 返回成功.S
+            return clientResponse;
+
     }
 
     private void getRPCSendLCResult(List<Future<Boolean>> futureList, CountDownLatch latch, List<Boolean> resultList) {
@@ -279,7 +289,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                 long start = System.currentTimeMillis(), end = start;
 
                 // 20 秒重试时间
-                while (end - start < 20 * 1000L) {
                     LcSendRequest lcRequest = new LcSendRequest();
                     lcRequest.setServerId(nodes.getSelf().getAddress());
                     lcRequest.setLogEntry(logEntry);
@@ -310,26 +319,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                         if (result != null && result.isSuccess()) {
                             LOGGER.info("send to "+peer.getAddress()+" successful");
 
-//                            receive event lc = max+1
-                            if(result.getLogicClock()>logicClock){
-                                logicClock = result.getLogicClock()+1;
-                            }else {
-                                logicClock = logicClock+1;
-                            }
-
-//                            System.out.println(logEntry.getMessage()+" "+result.getLatency());
-                            List<Long> lcList = lcMap.get(logEntry.getMessage());
-                            lcList.add(result.getLogicClock());
-                            lcMap.put(logEntry.getMessage(),lcList);
-
-                            List<Long> laList = latency_temp.get(logEntry.getMessage());
-                            laList.add(result.getLatency());
-                            latency_temp.put(logEntry.getMessage(),laList);
-
-                            AtomicInteger e =  extraM.get(logEntry.getMessage());
-                            e.addAndGet(result.getExtraM());
-                            extraM.put(logEntry.getMessage(),e);
-
 
                             return true;
                         }
@@ -337,11 +326,9 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                         end = System.currentTimeMillis();
 
                     } catch (Exception e) {
-                        continue;
 
                     }
 
-                }
 
                 return false;
 
@@ -351,7 +338,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
     @Override
     public LcSendResponse handlerSendLcRequest(LcSendRequest request) {
-        LOGGER.warn("handlerRequestVote will be invoke, request info : {}", request);
         return consensus.sendLogicTime(request);
     }
 
