@@ -35,35 +35,11 @@ public class SkeenClient {
 
     private static List<Message> messages = new ArrayList<Message>();
 
-   static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    //static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
+    //static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
+    static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.48.5:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
-//        ClientRequest req = new ClientRequest();
-//
-//        req.setKey("3");
-//        req.setValue("35");
-//        req.setType(ClientRequest.PUT);
-//
-//        Request<ClientRequest> request = new Request();
-//
-//        request.setObj(req);
-//        request.setUrl("localhost:8775");
-//        request.setCmd(Request.REQ_CLIENT);
-//
-//        Response<ClientResponse> response;
-//
-//        try {
-//            response = client.send(request);
-//            ;
-//            if (response.getResult().isSuccess()) {
-//                System.out.println("message: " + req.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
-//
-//            }
-//
-//        } catch (SkeenRemotingException e) {
-//        }
     }
 
     public static void main0() throws InterruptedException {
@@ -74,7 +50,7 @@ public class SkeenClient {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-        for(int j =0; j<10; j++){
+        for(int j =0; j<605; j++){
             for(int i=0;i<150;i++){
                 message = message+1;
                 int m = message;
@@ -120,20 +96,21 @@ public class SkeenClient {
             }
             Thread.sleep(1000);
         }
-//        String s = JSON.toJSONString(messages);
-//        FileWriter fw = null;
-//        File f = new File("D:/pigg_skeen_1.txt");
-//        try {
-//            if(!f.exists()){
-//                f.createNewFile();
-//            }
-//            fw = new FileWriter(f);
-//            BufferedWriter out = new BufferedWriter(fw);
-//            out.write(s, 0, s.length()-1);
-//            out.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+
+        String s = JSON.toJSONString(messages);
+        FileWriter fw = null;
+        File f = new File("D:/_case3Skeen1.txt");
+        try {
+            if(!f.exists()){
+                f.createNewFile();
+            }
+            fw = new FileWriter(f);
+            BufferedWriter out = new BufferedWriter(fw);
+            out.write(s, 0, s.length()-1);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         System.out.println("end");
        }
 
