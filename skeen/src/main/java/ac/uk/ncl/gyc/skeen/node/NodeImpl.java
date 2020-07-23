@@ -278,8 +278,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             public Boolean call() throws Exception {
                 long start = System.currentTimeMillis(), end = start;
 
-                // 20 秒重试时间
-                while (end - start < 20 * 1000L) {
                     LcSendRequest lcRequest = new LcSendRequest();
                     lcRequest.setServerId(nodes.getSelf().getAddress());
                     lcRequest.setLogEntry(logEntry);
@@ -337,11 +335,11 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                         end = System.currentTimeMillis();
 
                     } catch (Exception e) {
-                        continue;
+
 
                     }
 
-                }
+
 
                 return false;
 

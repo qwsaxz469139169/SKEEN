@@ -36,34 +36,10 @@ public class SkeenClient {
     private static List<Message> messages = new ArrayList<Message>();
 
 //    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
-
+static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.48.5:8777");
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
-//        ClientRequest req = new ClientRequest();
-//
-//        req.setKey("3");
-//        req.setValue("35");
-//        req.setType(ClientRequest.PUT);
-//
-//        Request<ClientRequest> request = new Request();
-//
-//        request.setObj(req);
-//        request.setUrl("localhost:8775");
-//        request.setCmd(Request.REQ_CLIENT);
-//
-//        Response<ClientResponse> response;
-//
-//        try {
-//            response = client.send(request);
-//            ;
-//            if (response.getResult().isSuccess()) {
-//                System.out.println("message: " + req.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
-//
-//            }
-//
-//        } catch (SkeenRemotingException e) {
-//        }
+
     }
 
     public static void main0() throws InterruptedException {
@@ -97,11 +73,7 @@ public class SkeenClient {
                             response = client.send(r);
                             ClientResponse clientResponse = response.getResult();
                             System.out.println("message: " + obj.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
-//                            JSONObject mes=new JSONObject();
-//                            mes.put("name",key);
-//                            mes.put("latency", response.getResult().getLatency());
-//                            mes.put("extraM", response.getResult().getExtraMessage());
-//                            jsonArray.add(mes);
+
                             Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
                             messages.add(message1);
                         } catch (Exception e) {
@@ -112,9 +84,10 @@ public class SkeenClient {
             }
             Thread.sleep(1000);
         }
+        Thread.sleep(20000);
         String s = JSON.toJSONString(messages);
         FileWriter fw = null;
-        File f = new File("D:/skeen_1.txt");
+        File f = new File("D:/_case1Skeen1.txt");
         try {
             if(!f.exists()){
                 f.createNewFile();

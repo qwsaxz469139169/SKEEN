@@ -42,9 +42,7 @@ public class ConsensusImpl implements Consensus {
         result.setSuccess(false);
         long receiveTime = System.currentTimeMillis();
 
-        if (!lock.tryLock()) {
-            return result;
-        }
+        lock.lock();
 
         try {
             System.out.println("Receive Logic time: " + lcSendRequest);
