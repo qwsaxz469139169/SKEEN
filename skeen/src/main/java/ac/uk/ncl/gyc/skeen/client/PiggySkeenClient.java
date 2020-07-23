@@ -105,6 +105,8 @@ public class PiggySkeenClient {
             }
             Thread.sleep(1000);
         }
+
+        Thread.sleep(20000);
         String s = JSON.toJSONString(messages);
         FileWriter fw = null;
         File f = new File("D:/_case2Skeen1.txt");
