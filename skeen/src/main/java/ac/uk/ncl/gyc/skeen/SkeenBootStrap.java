@@ -21,7 +21,7 @@ public class SkeenBootStrap {
 
     public static void main0(String[] args) throws Throwable {
         // String[] nodesAddress = {"localhost:8775","localhost:8776","localhost:8777"};
-        String[] nodesAddress = {"100.70.48.24:8775", "100.70.49.81:8776", "100.70.49.64:8777"};
+        String[] nodesAddress = {"100.70.49.128:8775", "100.70.49.85:8776", "100.70.48.5:8777"};
 
         NodesConfigration config = new NodesConfigration();
 
