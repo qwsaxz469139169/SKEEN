@@ -31,11 +31,11 @@ public class SkeenClient2 {
 
     private static List<Message> messages = new ArrayList<Message>();
 
-//    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775","100.70.49.28:8776","100.70.49.44:8777");
+    //    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
+    static List<String> nodeList = Lists.newArrayList("100.70.49.99:8775", "100.70.49.28:8776", "100.70.49.44:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
-       main0();
+        main0();
 //        ClientRequest req = new ClientRequest();
 //
 //        req.setKey("3");
@@ -70,17 +70,17 @@ public class SkeenClient2 {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-        for(int j =0; j<1200; j++){
-            for(int i=0;i<5;i++){
-                message = message+1;
+        for (int j = 0; j < 1200; j++) {
+            for (int i = 0; i < 5; i++) {
+                message = message + 1;
                 int m = message;
                 int index = (int) (count.incrementAndGet() % nodeList.size());
                 String req_address = nodeList.get(index);
                 SkeenThreadPool.execute(new Runnable() {
                     @Override
                     public void run() {
-                        String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client2:"+m).value("world:").type(ClientRequest.PUT).build();
+                        String key = "client1:" + m;
+                        ClientRequest obj = ClientRequest.newBuilder().key("client2:" + m).value("world:").type(ClientRequest.PUT).build();
 
                         Request<ClientRequest> r = new Request<>();
                         r.setObj(obj);
@@ -112,21 +112,18 @@ public class SkeenClient2 {
         FileWriter fw = null;
         File f = new File("D:/skeen_2.txt");
         try {
-            if(!f.exists()){
+            if (!f.exists()) {
                 f.createNewFile();
             }
             fw = new FileWriter(f);
             BufferedWriter out = new BufferedWriter(fw);
-            out.write(s, 0, s.length()-1);
+            out.write(s, 0, s.length() - 1);
             out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("end");
-       }
-
-
-
+    }
 
 
 }

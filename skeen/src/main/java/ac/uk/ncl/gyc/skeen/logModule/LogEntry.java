@@ -112,10 +112,10 @@ public class LogEntry implements Serializable, Comparable {
     @Override
     public String toString() {
         return "{" +
-            "index=" + index +
-            ", logic_clock=" + logic_clock +
-            ", command=" + command +
-            '}';
+                "index=" + index +
+                ", logic_clock=" + logic_clock +
+                ", command=" + command +
+                '}';
     }
 
     @Override
@@ -139,8 +139,8 @@ public class LogEntry implements Serializable, Comparable {
         }
         LogEntry logEntry = (LogEntry) o;
         return logic_clock == logEntry.logic_clock &&
-            Objects.equals(index, logEntry.index) &&
-            Objects.equals(command, logEntry.command);
+                Objects.equals(index, logEntry.index) &&
+                Objects.equals(command, logEntry.command);
     }
 
     @Override

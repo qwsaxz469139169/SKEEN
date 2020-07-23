@@ -3,45 +3,45 @@ package ac.uk.ncl.gyc.skeen.entity;
 import java.io.Serializable;
 
 public class LcSendResponse implements Serializable {
-	
-	boolean success;
 
-	long logicClock;
+    boolean success;
 
-	long latency;
+    long logicClock;
 
-	int extraM;
+    long latency;
 
-	public long getLatency() {
-		return latency;
-	}
+    int extraM;
 
-	public void setLatency(long latency) {
-		this.latency = latency;
-	}
+    public long getLatency() {
+        return latency;
+    }
 
-	public int getExtraM() {
-		return extraM;
-	}
+    public void setLatency(long latency) {
+        this.latency = latency;
+    }
 
-	public void setExtraM(int extraM) {
-		this.extraM = extraM;
-	}
+    public int getExtraM() {
+        return extraM;
+    }
 
-	public boolean isSuccess() {
-		return success;
-	}
+    public void setExtraM(int extraM) {
+        this.extraM = extraM;
+    }
 
-	public void setSuccess(boolean success) {
-		this.success = success;
-	}
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
 
 
-	public long getLogicClock() {
-		return logicClock;
-	}
+    public long getLogicClock() {
+        return logicClock;
+    }
 
-	public void setLogicClock(long logicClock) {
-		this.logicClock = logicClock;
-	}
+    public void setLogicClock(long logicClock) {
+        this.logicClock = logicClock;
+    }
 }

@@ -1,9 +1,8 @@
 package ac.uk.ncl.gyc.skeen.logModule;
 
 /**
- *
- * @see LogEntry
  * @author Yuchen Guo
+ * @see LogEntry
  */
 public interface LogModule {
 

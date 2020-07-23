@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Message {
 
-   @JSONField(name = "message")
+    @JSONField(name = "message")
     private int messages;
 
     @JSONField(name = "extra_message")
@@ -28,7 +28,7 @@ public class Message {
         return messages;
     }
 
-    public void setMessages( int messages) {
+    public void setMessages(int messages) {
         this.messages = messages;
     }
 

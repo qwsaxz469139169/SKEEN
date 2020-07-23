@@ -59,12 +59,12 @@ public class SkeenRpcServerImpl implements SkeenRpcServer {
     @Override
     public Response handlerRequest(Request request) throws InterruptedException {
         long receiveTime = System.currentTimeMillis();
-        System.out.println("handlerRequest method param: "+ request.getObj());
+        System.out.println("handlerRequest method param: " + request.getObj());
         if (request.getCmd() == Request.REQ_SEND_LC) {
             return new Response(node.handlerSendLcRequest((LcSendRequest) request.getObj()));
         } else if (request.getCmd() == Request.REQ_CLIENT) {
-            return new Response(node.handlerClientRequest((ClientRequest) request.getObj(),receiveTime));
-        }else if (request.getCmd() == Request.REQ_INI_TASK) {
+            return new Response(node.handlerClientRequest((ClientRequest) request.getObj(), receiveTime));
+        } else if (request.getCmd() == Request.REQ_INI_TASK) {
             return new Response(node.handlerInitialTask((InitialTaskRequest) request.getObj()));
         }
         return null;

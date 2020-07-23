@@ -7,12 +7,14 @@ import ac.uk.ncl.gyc.skeen.client.ClientRequest;
 public class Request<T> implements Serializable {
     public static final int REQ_CLIENT = 0;
 
-    public static final int REQ_REDICT= 1;
+    public static final int REQ_REDICT = 1;
     public static final int REQ_SEND_LC = 2;
     public static final int REQ_INI_TASK = 3;
 
 
-    /** 请求类型 */
+    /**
+     * 请求类型
+     */
     private int cmd = -1;
 
     private T obj;
@@ -62,7 +64,7 @@ public class Request<T> implements Serializable {
         this.url = url;
     }
 
-    public static  Builder newBuilder() {
+    public static Builder newBuilder() {
         return new Builder<>();
     }
 

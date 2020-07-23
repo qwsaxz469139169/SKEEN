@@ -43,6 +43,7 @@ public class DBdriver {
 
         private static final DBdriver INSTANCE = new DBdriver();
     }
+
     /**
      * 获取连接
      *
@@ -71,7 +72,7 @@ public class DBdriver {
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }finally {
+        } finally {
             conn.close();
             rs.close();
 
@@ -79,12 +80,12 @@ public class DBdriver {
     }
 
 
-    public static void add(String message){
+    public static void add(String message) {
         Connection conn = getConnection();
         PreparedStatement psql;
 
         try {
-            psql = conn.prepareStatement("insert into message (name) "+ "values(?)");
+            psql = conn.prepareStatement("insert into message (name) " + "values(?)");
 
             psql.setString(1, message);
 
@@ -92,7 +93,7 @@ public class DBdriver {
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException e) {
@@ -102,29 +103,29 @@ public class DBdriver {
         }
     }
 
-    public static void updateLatency(String message, String node, long latency){
+    public static void updateLatency(String message, String node, long latency) {
         Connection conn = getConnection();
         PreparedStatement psql;
         String colum = "";
 
 
-        if(node.equals("localhost:8775")){
-            colum="la";
-        }else if(node.equals("localhost:8776")){
-            colum="lb";
-        }else if(node.equals("localhost:8777")){
-            colum="lc";
+        if (node.equals("localhost:8775")) {
+            colum = "la";
+        } else if (node.equals("localhost:8776")) {
+            colum = "lb";
+        } else if (node.equals("localhost:8777")) {
+            colum = "lc";
         }
 
         try {
-            psql = conn.prepareStatement("update message set "+colum+" = ? where name = ?");
+            psql = conn.prepareStatement("update message set " + colum + " = ? where name = ?");
             psql.setLong(1, latency);
-            psql.setString(2,message);
+            psql.setString(2, message);
             psql.executeUpdate();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException e) {
@@ -135,29 +136,29 @@ public class DBdriver {
 
     }
 
-    public static void updateEM(String message, String node, int em){
+    public static void updateEM(String message, String node, int em) {
         Connection conn = getConnection();
         PreparedStatement psql;
         String colum = "";
 
-        if(node.equals("localhost:8775")){
-            colum="ma";
-        }else if(node.equals("localhost:8776")){
-            colum="mb";
-        }else if(node.equals("localhost:8777")){
-            colum="mc";
+        if (node.equals("localhost:8775")) {
+            colum = "ma";
+        } else if (node.equals("localhost:8776")) {
+            colum = "mb";
+        } else if (node.equals("localhost:8777")) {
+            colum = "mc";
         }
 
 
         try {
-            psql = conn.prepareStatement("update message set "+colum+" = ? where name = ?");
+            psql = conn.prepareStatement("update message set " + colum + " = ? where name = ?");
             psql.setInt(1, em);
-            psql.setString(2,message);
+            psql.setString(2, message);
             psql.executeUpdate();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException e) {

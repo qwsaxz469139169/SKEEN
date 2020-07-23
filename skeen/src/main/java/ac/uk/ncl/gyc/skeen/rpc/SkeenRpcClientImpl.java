@@ -11,9 +11,10 @@ import ac.uk.ncl.gyc.skeen.exception.SkeenRemotingException;
 public class SkeenRpcClientImpl implements SkeenRpcClient {
 
     public static Logger logger = LoggerFactory
-        .getLogger(SkeenRpcClientImpl.class.getName());
+            .getLogger(SkeenRpcClientImpl.class.getName());
 
     private final static RpcClient CLIENT = new com.alipay.remoting.rpc.RpcClient();
+
     static {
         CLIENT.init();
     }

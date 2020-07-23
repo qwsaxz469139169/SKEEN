@@ -6,7 +6,6 @@ import com.alipay.remoting.BizContext;
 import com.alipay.remoting.rpc.protocol.AbstractUserProcessor;
 
 /**
- *
  * @author 莫那·鲁道
  */
 public abstract class SkeenUserProcessor<T> extends AbstractUserProcessor<T> {
@@ -14,7 +13,7 @@ public abstract class SkeenUserProcessor<T> extends AbstractUserProcessor<T> {
     @Override
     public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) {
         throw new SkeenNotSupportException(
-            "Raft Server not support handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) ");
+                "Raft Server not support handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) ");
     }
 
 

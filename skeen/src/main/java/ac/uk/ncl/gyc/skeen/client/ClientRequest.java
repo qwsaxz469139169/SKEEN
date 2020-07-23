@@ -15,7 +15,7 @@ public class ClientRequest implements Serializable {
 
     String message;
 
-    public ClientRequest(){
+    public ClientRequest() {
     }
 
     private ClientRequest(Builder builder) {
@@ -69,7 +69,7 @@ public class ClientRequest implements Serializable {
             this.code = code;
         }
 
-        public static Type value(int code ) {
+        public static Type value(int code) {
             for (Type type : values()) {
                 if (type.code == code) {
                     return type;
@@ -111,6 +111,7 @@ public class ClientRequest implements Serializable {
             value = val;
             return this;
         }
+
         public Builder message(String message) {
             message = message;
             return this;

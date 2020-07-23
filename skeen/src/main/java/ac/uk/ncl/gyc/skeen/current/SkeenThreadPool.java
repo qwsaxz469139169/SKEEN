@@ -22,12 +22,12 @@ public class SkeenThreadPool {
 
     private static ThreadPoolExecutor getThreadPool() {
         return new SkeenThreadPoolExecutor(
-            cup,
-            maxPoolSize,
-            keepTime,
-            keepTimeUnit,
-            new LinkedBlockingQueue<>(queueSize),
-            new NameThreadFactory());
+                cup,
+                maxPoolSize,
+                keepTime,
+                keepTimeUnit,
+                new LinkedBlockingQueue<>(queueSize),
+                new NameThreadFactory());
     }
 
     private static ScheduledExecutorService getScheduled() {

@@ -31,11 +31,11 @@ public class PiggySkeenClient2 {
 
     private static List<Message> messages = new ArrayList<Message>();
 
-   //static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    static List<String> nodeList = Lists.newArrayList("100.70.48.24:8775","100.70.49.81:8776","100.70.49.64:8777");
+    //static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
+    static List<String> nodeList = Lists.newArrayList("100.70.48.24:8775", "100.70.49.81:8776", "100.70.49.64:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
-       main0();
+        main0();
 //        ClientRequest req = new ClientRequest();
 //
 //        req.setKey("3");
@@ -70,17 +70,17 @@ public class PiggySkeenClient2 {
         AtomicLong count = new AtomicLong(3);
 
         int message = 0;
-      for(int j =0; j<605; j++){
-            for(int i=0;i<15;i++){
-                message = message+1;
+        for (int j = 0; j < 605; j++) {
+            for (int i = 0; i < 15; i++) {
+                message = message + 1;
                 int m = message;
                 int index = (int) (count.incrementAndGet() % nodeList.size());
                 String req_address = nodeList.get(index);
                 SkeenThreadPool.execute(new Runnable() {
                     @Override
                     public void run() {
-                        String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client2:"+m).value("world:").type(ClientRequest.PUT).build();
+                        String key = "client1:" + m;
+                        ClientRequest obj = ClientRequest.newBuilder().key("client2:" + m).value("world:").type(ClientRequest.PUT).build();
 
                         Request<ClientRequest> r = new Request<>();
                         r.setObj(obj);
@@ -95,23 +95,23 @@ public class PiggySkeenClient2 {
 
 //                            String[] mess = {};
 //                            List<ReMes> m1 = new ArrayList<>();
-                            if(response.getResult().getLatency()!=null){
-                                System.out.println("message: " + obj.key +" has been sent"  );
+                            if (response.getResult().getLatency() != null) {
+                                System.out.println("message: " + obj.key + " has been sent");
 
                                 int con = 0;
-                                for(String mmmmm : response.getResult().getRequests()){
+                                for (String mmmmm : response.getResult().getRequests()) {
 //                                    ReMes reMes = new ReMes(mmmmm);
 //                                    m1.add(reMes);
                                     con++;
-                                    System.out.println("message: " + mmmmm+", latency: " + response.getResult().getLatency());
+                                    System.out.println("message: " + mmmmm + ", latency: " + response.getResult().getLatency());
                                 }
 
                                 Message message1 = new Message(con, 6, response.getResult().getLatency());
 
                                 messages.add(message1);
                                 jsonArray.add(message1);
-                            }else{
-                                System.out.println("message: " + obj.key +" has been sent"  );
+                            } else {
+                                System.out.println("message: " + obj.key + " has been sent");
                             }
 //                            JSONObject mes=new JSONObject();
 //                            mes.put("name",key);
@@ -127,26 +127,23 @@ public class PiggySkeenClient2 {
                 });
             }
             Thread.sleep(1000);
-       }
+        }
         String s = JSON.toJSONString(messages);
         FileWriter fw = null;
         File f = new File("D:/15_skeen_2.txt");
         try {
-            if(!f.exists()){
+            if (!f.exists()) {
                 f.createNewFile();
             }
             fw = new FileWriter(f);
             BufferedWriter out = new BufferedWriter(fw);
-            out.write(s, 0, s.length()-1);
+            out.write(s, 0, s.length() - 1);
             out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("end");
-       }
-
-
-
+    }
 
 
 }

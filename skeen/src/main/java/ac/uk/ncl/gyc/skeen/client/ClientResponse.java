@@ -19,7 +19,7 @@ public class ClientResponse implements Serializable {
     public String toString() {
         return "ClientResponse{" +
                 "result=" + result +
-                "success="+success+
+                "success=" + success +
                 '}';
     }
 

@@ -28,8 +28,8 @@ public class ConsensusImpl implements Consensus {
     public final NodeImpl node;
 
     public final ReentrantLock lock = new ReentrantLock();
-    Condition condition =lock.newCondition();
-    Condition condition2 =lock.newCondition();
+    Condition condition = lock.newCondition();
+    Condition condition2 = lock.newCondition();
 
     public final ReentrantLock lock2 = new ReentrantLock();
 
@@ -38,24 +38,21 @@ public class ConsensusImpl implements Consensus {
     }
 
     @Override
-    public  LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) throws InterruptedException {
+    public LcSendResponse sendLogicTime(LcSendRequest lcSendRequest) throws InterruptedException {
         LcSendResponse result = new LcSendResponse();
         result.setSuccess(false);
 
         long receiveTime = System.currentTimeMillis();
-        if (!lock.tryLock(10,TimeUnit.SECONDS)){
-            System.out.println( "tryLock" + lcSendRequest);
-           return result;
-       }
 
+        lock.lock();
         try {
             System.out.println("Receive Logic time: " + lcSendRequest);
 
             long ts = lcSendRequest.getTs();
             LogEntry logEntry = null;
             List<LogEntry> logEntries = lcSendRequest.getLogEntries();
-            for(LogEntry l : logEntries ){
-                if(l.isFirst_index()){
+            for (LogEntry l : logEntries) {
+                if (l.isFirst_index()) {
                     logEntry = l;
                 }
             }
@@ -69,11 +66,11 @@ public class ConsensusImpl implements Consensus {
                 node.logicClock = ts;
             }
 
-            if(node.received.get(key)==null){
+            if (node.received.get(key) == null) {
                 System.out.println("First receive message: " + key);
                 node.received.put(key, node.logicClock);
                 node.startTime.put(key, receiveTime);
-            }else {
+            } else {
                 System.out.println("second receive message: " + key);
             }
 
@@ -82,19 +79,19 @@ public class ConsensusImpl implements Consensus {
 //            }
 
 
-            if(node.lcMap.get(key)==null){
+            if (node.lcMap.get(key) == null) {
                 List<Long> lcList = new CopyOnWriteArrayList<>();
                 lcList.add(node.logicClock);
                 lcList.add(lcSendRequest.getTs());
                 node.lcMap.put(key, lcList);
-            }else{
+            } else {
                 List<Long> lcList = node.lcMap.get(key);
                 lcList.add(lcSendRequest.getTs());
                 node.lcMap.put(key, lcList);
             }
 
 
-                node.received.put(key, node.logicClock);
+            node.received.put(key, node.logicClock);
 //                node.extraM.put(key, new AtomicInteger(0));
 
 //                List<Long> lcList = new ArrayList<>();
@@ -102,98 +99,97 @@ public class ConsensusImpl implements Consensus {
 //                lcList.add(logEntry.getLogic_clock());
 //                node.lcMap.put(key, lcList);
 
-                //如果是初始节点发过来的消息，需要请求其他节点的承认
-                System.out.println(logEntry.getMessage()+"---初始节点： "+logEntry.getInitialNode());
+            //如果是初始节点发过来的消息，需要请求其他节点的承认
+            System.out.println(logEntry.getMessage() + "---初始节点： " + logEntry.getInitialNode());
 
 
-                    String add = "";
-                    for (PeerNode peer : node.nodes.getPeersWithOutSelf()) {
-                        // TODO check self and SkeenThreadPool
-                        // 并行发起 RPC 复制
-                        if (peer.getAddress() != lcSendRequest.getServerId()) {
-                            add = peer.getAddress();
-                        }
+            String add = "";
+            for (PeerNode peer : node.nodes.getPeersWithOutSelf()) {
+                // TODO check self and SkeenThreadPool
+                // 并行发起 RPC 复制
+                if (peer.getAddress() != lcSendRequest.getServerId()) {
+                    add = peer.getAddress();
+                }
 
-                    }
+            }
 
-                    InitialTaskRequest initialTaskRequest = new InitialTaskRequest();
-                    initialTaskRequest.setServerId(node.nodes.getSelf().getAddress());
-                    initialTaskRequest.setLogEntries(logEntries);
-                    initialTaskRequest.setTs(node.received.get(logEntry.getMessage()));
-                    initialTaskRequest.setMessage(key);
-
-
-                    Request request = new Request();
-                    request.setCmd(Request.REQ_INI_TASK);
-                    request.setObj(initialTaskRequest);
-                    request.setUrl(add);
+            InitialTaskRequest initialTaskRequest = new InitialTaskRequest();
+            initialTaskRequest.setServerId(node.nodes.getSelf().getAddress());
+            initialTaskRequest.setLogEntries(logEntries);
+            initialTaskRequest.setTs(node.received.get(logEntry.getMessage()));
+            initialTaskRequest.setMessage(key);
 
 
-                    Response response = node.SKEEN_RPC_CLIENT.send(request);
+            Request request = new Request();
+            request.setCmd(Request.REQ_INI_TASK);
+            request.setObj(initialTaskRequest);
+            request.setUrl(add);
 
 
-                    System.out.println(logEntry.getMessage()+"---(not ini) Current node send ack to other node : " + add);
+            Response response = node.SKEEN_RPC_CLIENT.send(request);
 
 
-                InitialTaskResponse lcResponse = (InitialTaskResponse) response.getResult();
-                    if (lcResponse != null && lcResponse.isSuccess()) {
-                        LOGGER.info(logEntry.getMessage()+"---(not ini) send to " + add + " successful");
+            System.out.println(logEntry.getMessage() + "---(not ini) Current node send ack to other node : " + add);
+
+
+            InitialTaskResponse lcResponse = (InitialTaskResponse) response.getResult();
+            if (lcResponse != null && lcResponse.isSuccess()) {
+                LOGGER.info(logEntry.getMessage() + "---(not ini) send to " + add + " successful");
 
 //                            receive event lc = max+1
-                        if (lcResponse.getLogicClock() > node.logicClock) {
-                            node.logicClock = lcResponse.getLogicClock() + 1;
-                        } else {
-                            node.logicClock = node.logicClock + 1;
-                        }
+                if (lcResponse.getLogicClock() > node.logicClock) {
+                    node.logicClock = lcResponse.getLogicClock() + 1;
+                } else {
+                    node.logicClock = node.logicClock + 1;
+                }
 
 
-                        List<Long> lcList2 = node.lcMap.get(key);
-                        lcList2.add(lcResponse.getLogicClock());
-                        node.lcMap.put(key, lcList2);
+                List<Long> lcList2 = node.lcMap.get(key);
+                lcList2.add(lcResponse.getLogicClock());
+                node.lcMap.put(key, lcList2);
 
-                        List<Long> maxList = node.lcMap.get(key);
-                        long snM = 0;
-                        for (int i = 0; i<maxList.size();i++){
-                            if(maxList.get(i)>snM){
-                                snM = maxList.get(i);
-                            }
-                        }
+                List<Long> maxList = node.lcMap.get(key);
+                long snM = 0;
+                for (int i = 0; i < maxList.size(); i++) {
+                    if (maxList.get(i) > snM) {
+                        snM = maxList.get(i);
+                    }
+                }
 
-                        node.stamped.put(key,snM);
+                node.stamped.put(key, snM);
 
-                        node.lcMap.remove(key);
+                node.lcMap.remove(key);
 
-                        for(LogEntry l : logEntries){
-                            node.logModule.write(logEntry);
-                        }
-
-
+                for (LogEntry l : logEntries) {
+                    node.logModule.write(logEntry);
+                }
 
 
 //                        AtomicInteger e = node.extraM.get(logEntry.getMessage());
 //                        e.incrementAndGet();
 //                        node.extraM.put(logEntry.getMessage(), e );
 
-                        long latency = System.currentTimeMillis()- node.startTime.get(key);
+                long latency = System.currentTimeMillis() - node.startTime.get(key);
 
-                        System.out.println(logEntry.getMessage()+"---(not ini) Commit success, latency: " + latency+", extra message: ");
-                        System.out.println(logEntry.getMessage()+"---(logic clock: " + node.received.get(key));
-                        System.out.println(logEntry.getMessage()+"---(not ini) logic clock: " + latency);;
+                System.out.println(logEntry.getMessage() + "---(not ini) Commit success, latency: " + latency + ", extra message: ");
+                System.out.println(logEntry.getMessage() + "---(logic clock: " + node.received.get(key));
+                System.out.println(logEntry.getMessage() + "---(not ini) logic clock: " + latency);
+                ;
 
-                        result.setLogicClock(node.received.get(key));
+                result.setLogicClock(node.received.get(key));
 //                        result.setExtraM(node.extraM.get(key).get());
-                        result.setLatency(latency);
-                        node.received.remove(key);
-                        node.startTime.remove(key);
+                result.setLatency(latency);
+                node.received.remove(key);
+                node.startTime.remove(key);
 //                        node.extraM.remove(key);
-                        node.stamped.remove(key);
+                node.stamped.remove(key);
 
-                        result.setSuccess(true);
+                result.setSuccess(true);
 
-                    }
+            }
 
             return result;
-        }finally {
+        } finally {
             lock.unlock();
         }
     }
@@ -212,7 +208,7 @@ public class ConsensusImpl implements Consensus {
 
             String key = request.getMessage();
 
-            if(node.received.get(key)==null){
+            if (node.received.get(key) == null) {
                 node.received.put(key, node.logicClock);
                 node.startTime.put(key, System.currentTimeMillis());
             }
@@ -222,22 +218,22 @@ public class ConsensusImpl implements Consensus {
 //            }
 
 
-            if(node.lcMap.get(key)==null){
+            if (node.lcMap.get(key) == null) {
                 List<Long> lcList = new CopyOnWriteArrayList<>();
                 lcList.add(node.logicClock);
                 lcList.add(request.getTs());
                 node.lcMap.put(key, lcList);
-            }else{
+            } else {
                 List<Long> lcList = node.lcMap.get(key);
                 lcList.add(request.getTs());
                 node.lcMap.put(key, lcList);
             }
 
-            System.out.println("receive ack: "+key+"     "+request.getServerId());
+            System.out.println("receive ack: " + key + "     " + request.getServerId());
             result.setSuccess(true);
 
-        }finally {
-lock2.unlock();
+        } finally {
+            lock2.unlock();
         }
         return result;
     }

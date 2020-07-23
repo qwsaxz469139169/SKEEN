@@ -6,7 +6,7 @@ import ac.uk.ncl.gyc.skeen.entity.LcSendResponse;
 import ac.uk.ncl.gyc.skeen.client.ClientResponse;
 import ac.uk.ncl.gyc.skeen.client.ClientRequest;
 
-public interface Node<T> extends LifeCycle{
+public interface Node<T> extends LifeCycle {
 
     /**
      * 设置配置文件.
@@ -21,7 +21,7 @@ public interface Node<T> extends LifeCycle{
      * @param request
      * @return
      */
-    ClientResponse handlerClientRequest(ClientRequest request,long receiveTime);
+    ClientResponse handlerClientRequest(ClientRequest request, long receiveTime);
 
 
     LcSendResponse handlerSendLcRequest(LcSendRequest request) throws InterruptedException;

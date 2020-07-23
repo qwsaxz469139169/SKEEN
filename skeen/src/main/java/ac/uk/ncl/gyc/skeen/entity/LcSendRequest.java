@@ -7,65 +7,65 @@ import java.util.List;
 
 public class LcSendRequest implements Serializable {
 
-	long ts;
-	
-	String Message;
+    long ts;
 
-	LogEntry logEntry;
+    String Message;
 
-	List<LogEntry> LogEntries;
-	
-	String serverId;
+    LogEntry logEntry;
 
-	public LcSendRequest() {
-	}
+    List<LogEntry> LogEntries;
 
-	public List<LogEntry> getLogEntries() {
-		return LogEntries;
-	}
+    String serverId;
 
-	public void setLogEntries(List<LogEntry> logEntries) {
-		LogEntries = logEntries;
-	}
+    public LcSendRequest() {
+    }
 
-	public long getTs() {
-		return ts;
-	}
+    public List<LogEntry> getLogEntries() {
+        return LogEntries;
+    }
 
-	public void setTs(long ts) {
-		this.ts = ts;
-	}
+    public void setLogEntries(List<LogEntry> logEntries) {
+        LogEntries = logEntries;
+    }
 
-	public String getMessage() {
-		return Message;
-	}
+    public long getTs() {
+        return ts;
+    }
 
-	public void setMessage(String message) {
-		Message = message;
-	}
+    public void setTs(long ts) {
+        this.ts = ts;
+    }
 
-	public String getServerId() {
-		return serverId;
-	}
+    public String getMessage() {
+        return Message;
+    }
 
-	public void setServerId(String serverId) {
-		this.serverId = serverId;
-	}
+    public void setMessage(String message) {
+        Message = message;
+    }
 
-	public LogEntry getLogEntry() {
-		return logEntry;
-	}
+    public String getServerId() {
+        return serverId;
+    }
 
-	public void setLogEntry(LogEntry logEntry) {
-		this.logEntry = logEntry;
-	}
+    public void setServerId(String serverId) {
+        this.serverId = serverId;
+    }
 
-	@Override
-	public String toString() {
-		return "LcSendRequest{" +
-				"ts=" + ts +
-				", Message='" + Message + '\'' +
-				", serverId='" + serverId + '\'' +
-				'}';
-	}
+    public LogEntry getLogEntry() {
+        return logEntry;
+    }
+
+    public void setLogEntry(LogEntry logEntry) {
+        this.logEntry = logEntry;
+    }
+
+    @Override
+    public String toString() {
+        return "LcSendRequest{" +
+                "ts=" + ts +
+                ", Message='" + Message + '\'' +
+                ", serverId='" + serverId + '\'' +
+                '}';
+    }
 }

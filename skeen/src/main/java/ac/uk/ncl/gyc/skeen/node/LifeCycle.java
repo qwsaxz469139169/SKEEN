@@ -1,7 +1,6 @@
 package ac.uk.ncl.gyc.skeen.node;
 
 /**
- *
  * @author 莫那·鲁道
  */
 public interface LifeCycle {

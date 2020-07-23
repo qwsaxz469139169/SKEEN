@@ -41,8 +41,8 @@ public class Response<T> implements Serializable {
     @Override
     public String toString() {
         return "Response{" +
-            "result=" + result +
-            '}';
+                "result=" + result +
+                '}';
     }
 
     public static final class Builder {

@@ -48,22 +48,22 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
 //    public static Map<String,AtomicInteger> extraM = new ConcurrentHashMap();
 
-    public static Map<String,Long> received = new ConcurrentHashMap();
+    public static Map<String, Long> received = new ConcurrentHashMap();
 
-    public static Map<String,Long> startTime = new ConcurrentHashMap();
+    public static Map<String, Long> startTime = new ConcurrentHashMap();
 
-    public static Map<String,Long> stamped = new ConcurrentHashMap();
+    public static Map<String, Long> stamped = new ConcurrentHashMap();
 
-    public static Map<Long,CopyOnWriteArrayList<PiggybackingLog>> REQUEST_LIST= new ConcurrentHashMap();
+    public static Map<Long, CopyOnWriteArrayList<PiggybackingLog>> REQUEST_LIST = new ConcurrentHashMap();
 
-    public static Map<String,Long> latency = new ConcurrentHashMap();
+    public static Map<String, Long> latency = new ConcurrentHashMap();
 
-    public static Map<String,List<Long>> lcMap= new ConcurrentHashMap();
+    public static Map<String, List<Long>> lcMap = new ConcurrentHashMap();
 
-    public static Map<String,List<Long>> latency_temp = new ConcurrentHashMap();
+    public static Map<String, List<Long>> latency_temp = new ConcurrentHashMap();
 
 
-    public static ConcurrentHashMap<String,Integer> ack = new ConcurrentHashMap();
+    public static ConcurrentHashMap<String, Integer> ack = new ConcurrentHashMap();
 
     /* ============ Node ============= */
     public NodesConfigration setting;
@@ -93,8 +93,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
     public static NodeImpl getInstance() {
         return DefaultNodeLazyHolder.INSTANCE;
     }
-
-
 
 
     private static class DefaultNodeLazyHolder {
@@ -129,11 +127,11 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         nodes = Nodes.getInstance();
         logModule = LogModuleImpl.getInstance();
         stateMachine = StateMachineImpl.getInstance();
-        
+
         for (String s : config.getPeerAddrs()) {
             PeerNode peer = new PeerNode(s);
             nodes.addPeer(peer);
-            
+
             if (s.equals("100.70.48.24:" + config.getSelfPort())) {
                 nodes.setSelf(peer);
             }
@@ -148,18 +146,19 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
      * 领导人把这条指令作为一条新的日志条目附加到日志中去，然后并行的发起附加条目 RPCs 给其他的服务器，让他们复制这条日志条目。
      * 当这条日志条目被安全的复制（下面会介绍），领导人会应用这条日志条目到它的状态机中然后把执行的结果返回给客户端。
      * 如果跟随者崩溃或者运行缓慢，再或者网络丢包，
-     *  领导人会不断的重复尝试附加日志条目 RPCs （尽管已经回复了客户端）直到所有的跟随者都最终存储了所有的日志条目。
+     * 领导人会不断的重复尝试附加日志条目 RPCs （尽管已经回复了客户端）直到所有的跟随者都最终存储了所有的日志条目。
+     *
      * @param request
      * @return
      */
     @Override
-    public synchronized ClientResponse handlerClientRequest(ClientRequest request,long receiveTime) {
+    public synchronized ClientResponse handlerClientRequest(ClientRequest request, long receiveTime) {
 
-        LOGGER.warn("handlerClientRequest handler {} operation, Key : [{}], Value : [{}].", request.getKey(),request.getValue());
+        LOGGER.warn("handlerClientRequest handler {} operation, Key : [{}], Value : [{}].", request.getKey(), request.getValue());
 
-        if (!StringUtil.isEmpty(request.getKey())&&!StringUtil.isEmpty(request.getValue())){
-            System.out.println("Current node receive message: " + request.getKey()+", "+request.getValue());
-        }else{
+        if (!StringUtil.isEmpty(request.getKey()) && !StringUtil.isEmpty(request.getValue())) {
+            System.out.println("Current node receive message: " + request.getKey() + ", " + request.getValue());
+        } else {
             return ClientResponse.fail();
         }
 
@@ -174,68 +173,67 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         long RUN_TIME = receiveTime - SYSTEM_START_TIME;
         long req_index = RUN_TIME / 2;
 
-        System.out.println("cur_time" + req_index );
+        System.out.println("cur_time" + req_index);
 
 
         CopyOnWriteArrayList<PiggybackingLog> req_list = null;
         PiggybackingLog firstPiggy = null;
 //lock.lock();
 //try{
-    if(REQUEST_LIST.get(req_index)!=null){
-        System.out.println("cur_req" + request.getKey()+" is  not first p" );
-        req_list = REQUEST_LIST.get(req_index);
-        req_list.add(piggybackingLog);
-        REQUEST_LIST.put(req_index,req_list);
-    }else{
-        System.out.println("cur_req" + request.getKey()+" is first p          req_index"+ req_index );
-        piggybackingLog.setFirstIndex(true);
-        req_list = new CopyOnWriteArrayList();
-        req_list.add(piggybackingLog);
-        REQUEST_LIST.put(req_index,req_list);
-    }
+        if (REQUEST_LIST.get(req_index) != null) {
+            System.out.println("cur_req" + request.getKey() + " is  not first p");
+            req_list = REQUEST_LIST.get(req_index);
+            req_list.add(piggybackingLog);
+            REQUEST_LIST.put(req_index, req_list);
+        } else {
+            System.out.println("cur_req" + request.getKey() + " is first p          req_index" + req_index);
+            piggybackingLog.setFirstIndex(true);
+            req_list = new CopyOnWriteArrayList();
+            req_list.add(piggybackingLog);
+            REQUEST_LIST.put(req_index, req_list);
+        }
 
-    System.out.println("last_index   " + LAXT_INDEX.get() );
+        System.out.println("last_index   " + LAXT_INDEX.get());
 //        System.out.println("last_index   " + cur_index );
 
 
+        if (req_index <= LAXT_INDEX.get()) {
+            System.out.println("return 1111111 size");
+            return ClientResponse.ok();
+        }
 
-    if(req_index<=LAXT_INDEX.get()){
-        System.out.println("return 1111111 size" );
-        return ClientResponse.ok();
-    }
+        long last_index = LAXT_INDEX.get();
 
-    long last_index = LAXT_INDEX.get();
-
-    LAXT_INDEX.getAndSet(req_index);
-    if(last_index == 0){
-        System.out.println("return 3333333 size" );
+        LAXT_INDEX.getAndSet(req_index);
+        if (last_index == 0) {
+            System.out.println("return 3333333 size");
 
 //        cur_index = req_index;
-        return ClientResponse.ok();
-    }
-
-    if(REQUEST_LIST.get(last_index)==null){
-        System.out.println("return 2222222 size" );
-        return ClientResponse.ok();
-    }else{
-        req_list = REQUEST_LIST.get(last_index);
-    }
-
-    REQUEST_LIST.remove(last_index);
-
-    System.out.println("req_list size" + req_list.size());
-    for(PiggybackingLog p : req_list){
-        if(p.isFirstIndex()){
-            firstPiggy = p;
+            return ClientResponse.ok();
         }
-    }
 
-    System.out.println("FIST PPP " + firstPiggy.getMessage());
+        if (REQUEST_LIST.get(last_index) == null) {
+            System.out.println("return 2222222 size");
+            return ClientResponse.ok();
+        } else {
+            req_list = REQUEST_LIST.get(last_index);
+        }
 
-    long ts = logicClock;
-    received.put(firstPiggy.getMessage(), ts);
+        REQUEST_LIST.remove(last_index);
+
+        System.out.println("req_list size" + req_list.size());
+        for (PiggybackingLog p : req_list) {
+            if (p.isFirstIndex()) {
+                firstPiggy = p;
+            }
+        }
+
+        System.out.println("FIST PPP " + firstPiggy.getMessage());
+
+        long ts = logicClock;
+        received.put(firstPiggy.getMessage(), ts);
 //        extraM.put(request.getKey(),new AtomicInteger(0));
-    latency_temp.put(firstPiggy.getMessage(),new CopyOnWriteArrayList<>());
+        latency_temp.put(firstPiggy.getMessage(), new CopyOnWriteArrayList<>());
 //}finally {
 //   lock.unlock();
 //}
@@ -243,16 +241,16 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
         List<Long> lcList = new CopyOnWriteArrayList<>();
         lcList.add(logicClock);
-        lcMap.put(firstPiggy.getMessage(),lcList);
+        lcMap.put(firstPiggy.getMessage(), lcList);
 
         List<LogEntry> logEntries = new ArrayList<>();
-        for(PiggybackingLog p : req_list){
+        for (PiggybackingLog p : req_list) {
             LogEntry logEntry = new LogEntry();
             logEntry.setInitialNode(nodes.getSelf().getAddress());
             logEntry.setMessage(p.getMessage());
             logEntry.setLogic_clock(logicClock);
 
-            if(p.isFirstIndex()){
+            if (p.isFirstIndex()) {
                 logEntry.setFirst_index(true);
             }
 
@@ -263,11 +261,10 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         // 预提交到本地日志, TODO 预提交
 
 
-
 //        logModule.write(logEntry);
 //        System.out.println("Current precommit to log module.");
 
-        System.out.println(firstPiggy.getMessage()+"---Start send logic time of the message to other node.");
+        System.out.println(firstPiggy.getMessage() + "---Start send logic time of the message to other node.");
 
 //        int count = 0;
 
@@ -280,7 +277,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         int count = 0;
 
         for (PeerNode peer : nodes.getPeersWithOutSelf()) {
-           // TODO check self and SkeenThreadPool
+            // TODO check self and SkeenThreadPool
             count++;
             // 并行发起 RPC 复制
             futureList.add(sendLC(peer, logEntries));
@@ -303,37 +300,37 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         }
 
         //  响应客户端(成功一半)
-        if (success.get()==count) {
-            System.out.println(firstPiggy.getMessage()+"---Receive success! Response Client.");
+        if (success.get() == count) {
+            System.out.println(firstPiggy.getMessage() + "---Receive success! Response Client.");
 
             List<Long> maxList = lcMap.get(firstPiggy.getMessage());
             long snM = 0;
-            for (int i = 0; i<maxList.size();i++){
-                if(maxList.get(i)>snM){
+            for (int i = 0; i < maxList.size(); i++) {
+                if (maxList.get(i) > snM) {
                     snM = maxList.get(i);
                 }
             }
-            stamped.put(firstPiggy.getMessage(),snM);
+            stamped.put(firstPiggy.getMessage(), snM);
             received.remove(firstPiggy.getMessage());
             lcMap.remove(firstPiggy.getMessage());
 
             List<String> requests = new ArrayList<>();
-            for(LogEntry l : logEntries){
+            for (LogEntry l : logEntries) {
                 logModule.write(l);
                 requests.add(l.getMessage());
             }
 
             stamped.remove(firstPiggy.getMessage());
 
-            long _latency = System.currentTimeMillis()- firstPiggy.getStartTime();
+            long _latency = System.currentTimeMillis() - firstPiggy.getStartTime();
 
-            for(long la:latency_temp.get(firstPiggy.getMessage())){
+            for (long la : latency_temp.get(firstPiggy.getMessage())) {
 
-                _latency=_latency+la;
+                _latency = _latency + la;
             }
 
-            _latency= _latency/3;
-            System.out.println(firstPiggy.getMessage()+"---latency la: ."+_latency);
+            _latency = _latency / 3;
+            System.out.println(firstPiggy.getMessage() + "---latency la: ." + _latency);
             logicClock++;
             ClientResponse clientResponse = new ClientResponse(true);
             clientResponse.setExtraMessage(6);
@@ -376,73 +373,72 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
                 // 20 秒重试时间
 //                while (end - start < 20 * 1000L) {
-                    LogEntry firstLog = null;
-                    for(LogEntry l : LogEntries ){
-                        if(l.isFirst_index()){
-                            firstLog = l;
-                        }
+                LogEntry firstLog = null;
+                for (LogEntry l : LogEntries) {
+                    if (l.isFirst_index()) {
+                        firstLog = l;
                     }
-                    LcSendRequest lcRequest = new LcSendRequest();
-                    lcRequest.setServerId(nodes.getSelf().getAddress());
-                    lcRequest.setLogEntries(LogEntries);
-                    lcRequest.setTs(received.get(firstLog.getMessage()));
-                    lcRequest.setMessage(firstLog.getMessage());
+                }
+                LcSendRequest lcRequest = new LcSendRequest();
+                lcRequest.setServerId(nodes.getSelf().getAddress());
+                lcRequest.setLogEntries(LogEntries);
+                lcRequest.setTs(received.get(firstLog.getMessage()));
+                lcRequest.setMessage(firstLog.getMessage());
 
 
-                    Request request = new Request();
-                    request.setCmd(Request.REQ_SEND_LC);
-                    request.setObj(lcRequest);
-                    request.setUrl(peer.getAddress());
+                Request request = new Request();
+                request.setCmd(Request.REQ_SEND_LC);
+                request.setObj(lcRequest);
+                request.setUrl(peer.getAddress());
 
-                    try {
-                        Response response = SKEEN_RPC_CLIENT.send(request);
+                try {
+                    Response response = SKEEN_RPC_CLIENT.send(request);
 
 //                        AtomicInteger em = extraM.get(logEntry.getMessage());
 //                        em.incrementAndGet();
 //                        extraM.put(logEntry.getMessage(),em);
 
-                        System.out.println(firstLog.getMessage()+"---Current node send ack to other node : "+peer.getAddress());
+                    System.out.println(firstLog.getMessage() + "---Current node send ack to other node : " + peer.getAddress());
 
-                        if (response == null) {
-                            LOGGER.info(firstLog.getMessage()+"---send to "+peer.getAddress()+" fail");
-                            return false;
-                        }
+                    if (response == null) {
+                        LOGGER.info(firstLog.getMessage() + "---send to " + peer.getAddress() + " fail");
+                        return false;
+                    }
 
-                        LcSendResponse result = (LcSendResponse) response.getResult();
-                        if (result != null && result.isSuccess()) {
-                            LOGGER.info(firstLog.getMessage()+"---send to "+peer.getAddress()+" successful");
+                    LcSendResponse result = (LcSendResponse) response.getResult();
+                    if (result != null && result.isSuccess()) {
+                        LOGGER.info(firstLog.getMessage() + "---send to " + peer.getAddress() + " successful");
 
 //                            receive event lc = max+1
-                            if(result.getLogicClock()>logicClock){
-                                logicClock = result.getLogicClock()+1;
-                            }else {
-                                logicClock = logicClock+1;
-                            }
+                        if (result.getLogicClock() > logicClock) {
+                            logicClock = result.getLogicClock() + 1;
+                        } else {
+                            logicClock = logicClock + 1;
+                        }
 
 //                            System.out.println(logEntry.getMessage()+" "+result.getLatency());
-                            List<Long> lcList = lcMap.get(firstLog.getMessage());
-                            lcList.add(result.getLogicClock());
-                            lcMap.put(firstLog.getMessage(),lcList);
+                        List<Long> lcList = lcMap.get(firstLog.getMessage());
+                        lcList.add(result.getLogicClock());
+                        lcMap.put(firstLog.getMessage(), lcList);
 
-                            List<Long> laList = latency_temp.get(firstLog.getMessage());
-                            laList.add(result.getLatency());
-                            latency_temp.put(firstLog.getMessage(),laList);
+                        List<Long> laList = latency_temp.get(firstLog.getMessage());
+                        laList.add(result.getLatency());
+                        latency_temp.put(firstLog.getMessage(), laList);
 //
 //                            AtomicInteger e =  extraM.get(firstLog.getMessage());
 //                            e.addAndGet(result.getExtraM());
 //                            extraM.put(firstLog.getMessage(),e);
 
 
-                            return true;
-                        }
-
-                        end = System.currentTimeMillis();
-
-                    } catch (Exception e) {
-e.printStackTrace();
-
+                        return true;
                     }
 
+                    end = System.currentTimeMillis();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+
+                }
 
 
                 return false;
