@@ -35,8 +35,20 @@ public class SkeenClient {
 
     private static List<Message> messages = new ArrayList<Message>();
 
+    private static  AtomicLong receiveCount = new AtomicLong(0);
+    private static AtomicInteger m_index = new AtomicInteger(0);
+    private static  AtomicLong count = new AtomicLong(3);
+
+    private static final int clientNum = 1;
+    private static final int runtime= 620;
+    private static final int c = 3;
+    private static final int delay= 200;
+    private static final int endcount= 3000;
+    private static final int arriveRate = 5;
+    private static final String arriveRateNum = "0.025";
+
     //static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.48.5:8777");
+    static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.48.126:8777");
 
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
@@ -47,7 +59,6 @@ public class SkeenClient {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
 
-        AtomicLong count = new AtomicLong(3);
 
         int message = 0;
         for(int j =0; j<605; j++){
@@ -116,6 +127,12 @@ public class SkeenClient {
 
 
 
+    static class MyTask implements Runnable{
 
+        @Override
+        public void run() {
+
+        }
+    }
 
 }
