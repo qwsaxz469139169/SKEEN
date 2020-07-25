@@ -102,7 +102,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
             consensus = new ConsensusImpl(this);
 
-//            SkeenThreadPool.execute(replicationFailQueueConsumer);
+//            CCSkeenThreadPool.execute(replicationFailQueueConsumer);
 
             started = true;
 
@@ -122,7 +122,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             PeerNode peer = new PeerNode(s);
             nodes.addPeer(peer);
             
-            if (s.equals("localhost:" + config.getSelfPort())) {
+            if (s.equals("100.70.49.128:" + config.getSelfPort())) {
                 nodes.setSelf(peer);
             }
         }
@@ -190,7 +190,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         int count = 0;
 
         for (PeerNode peer : nodes.getPeersWithOutSelf()) {
-           // TODO check self and SkeenThreadPool
+           // TODO check self and CCSkeenThreadPool
             count++;
             // 并行发起 RPC 复制
             futureList.add(sendLC(peer, logEntry));

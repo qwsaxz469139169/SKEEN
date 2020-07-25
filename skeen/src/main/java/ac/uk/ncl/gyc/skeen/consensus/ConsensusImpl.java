@@ -97,7 +97,7 @@ public class ConsensusImpl implements Consensus {
 
                     String add = "";
                     for (PeerNode peer : node.nodes.getPeersWithOutSelf()) {
-                        // TODO check self and SkeenThreadPool
+                        // TODO check self and CCSkeenThreadPool
                         // 并行发起 RPC 复制
                         if (peer.getAddress() != lcSendRequest.getServerId()) {
                             add = peer.getAddress();

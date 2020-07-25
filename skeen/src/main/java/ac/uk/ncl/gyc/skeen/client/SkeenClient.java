@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import ac.uk.ncl.gyc.skeen.clientCur.CCSkeenThreadPool;
 import ac.uk.ncl.gyc.skeen.current.SkeenThreadPool;
 import ac.uk.ncl.gyc.skeen.exception.SkeenRemotingException;
 import com.alibaba.fastjson.JSON;
@@ -34,9 +35,20 @@ public class SkeenClient {
     static String req_address = "";
 
     private static List<Message> messages = new ArrayList<Message>();
+    private static  AtomicLong count = new AtomicLong(3);
+    private static  AtomicLong receiveCount = new AtomicLong(0);
+    private static AtomicInteger m_index = new AtomicInteger(0);
+
+    private static final int clientNum = 3;
+    private static final int runtime= 620;
+    private static final int c = 1;
+    private static final int delay= 13;
+    private static final int endcount= 3000;
+    private static final int arriveRate = 30;
+    private static final String arriveRateNum = "0.75";
 
 //    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.48.5:8777");
+static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.49.226:8777");
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
 
@@ -44,50 +56,14 @@ static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.
 
     public static void main0() throws InterruptedException {
 
-        JSONObject jsonObject = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
+        MyTask myTask = new MyTask();
+        CCSkeenThreadPool.scheduleWithFixedDelay(myTask,delay);
 
-        AtomicLong count = new AtomicLong(3);
-
-        int message = 0;
-        for(int j =0; j<1200; j++){
-            for(int i=0;i<5;i++){
-                message = message+1;
-                int m = message;
-                int index = (int) (count.incrementAndGet() % nodeList.size());
-                String req_address = nodeList.get(index);
-                SkeenThreadPool.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        String key = "client1:"+m;
-                        ClientRequest obj = ClientRequest.newBuilder().key("client1:"+m).value("world:").type(ClientRequest.PUT).build();
-
-                        Request<ClientRequest> r = new Request<>();
-                        r.setObj(obj);
-                        r.setUrl(req_address);
-                        r.setCmd(Request.REQ_CLIENT);
-
-                        Response<ClientResponse> response;
-
-                        try {
-                            response = client.send(r);
-                            ClientResponse clientResponse = response.getResult();
-                            System.out.println("message: " + obj.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
-
-                            Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
-                            messages.add(message1);
-                        } catch (Exception e) {
-
-                        }
-                    }
-                });
-            }
-            Thread.sleep(1000);
-        }
-        Thread.sleep(20000);
+        while(true){
+    if(m_index.get()>endcount){
         String s = JSON.toJSONString(messages);
         FileWriter fw = null;
-        File f = new File("D:/_case1Skeen1.txt");
+        File f = new File("D:/"+arriveRateNum+"_case"+c+"Skeen"+clientNum+".txt");
         try {
             if(!f.exists()){
                 f.createNewFile();
@@ -100,10 +76,61 @@ static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.
             e.printStackTrace();
         }
         System.out.println("end");
-       }
+        System.exit(0);
+    }
+
+}
+}
 
 
 
+static class MyTask implements Runnable{
+
+    @Override
+    public void run() {
+        int m = m_index.addAndGet(1);
+        int index = (int) (count.incrementAndGet() % nodeList.size());
+        String req_address = nodeList.get(index);
+        ClientRequest obj = ClientRequest.newBuilder().key("client"+clientNum+":"+m).value("world:").type(ClientRequest.PUT).build();
+
+        Request<ClientRequest> r = new Request<>();
+        r.setObj(obj);
+        r.setUrl(req_address);
+        r.setCmd(Request.REQ_CLIENT);
+
+        Response<ClientResponse> response;
+
+        try {
+            response = client.send(r);
+            ClientResponse clientResponse = response.getResult();
+            if(response.getResult().getLatency()!=null){
+                System.out.println("message: " + obj.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
+
+                Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
+                messages.add(message1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            String s = JSON.toJSONString(messages);
+            FileWriter fw = null;
+            File f = new File("D:/"+arriveRateNum+"_case"+c+"Skeen"+clientNum+".txt");
+            try {
+                if(!f.exists()){
+                    f.createNewFile();
+                }
+                fw = new FileWriter(f);
+                BufferedWriter out = new BufferedWriter(fw);
+                out.write(s, 0, s.length()-1);
+                out.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            System.out.println("end");
+            System.exit(0);
+        }
+    }
+}
 
 
 }
