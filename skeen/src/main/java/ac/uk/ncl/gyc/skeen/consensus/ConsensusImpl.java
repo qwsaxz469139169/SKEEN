@@ -61,6 +61,7 @@ public class ConsensusImpl implements Consensus {
                 System.out.println("First receive message: " + key);
                 node.received.put(key, node.logicClock);
                 node.startTime.put(key, receiveTime);
+                node.sentAdd.put(key,logEntry.getSentAdd());
             }else {
                 System.out.println("second receive message: " + key);
             }
@@ -82,13 +83,9 @@ public class ConsensusImpl implements Consensus {
             }
 
 
-                node.received.put(key, node.logicClock);
-                node.extraM.put(key, new AtomicInteger(0));
+            node.extraM.put(key, new AtomicInteger(0));
 
-                List<Long> lcList = new ArrayList<>();
-                lcList.add(node.logicClock);
-                lcList.add(logEntry.getLogic_clock());
-                node.lcMap.put(key, lcList);
+
 
                 //如果是初始节点发过来的消息，需要请求其他节点的承认
                 System.out.println("初始节点： "+logEntry.getInitialNode());
@@ -203,9 +200,8 @@ public class ConsensusImpl implements Consensus {
         long receiveTime = System.currentTimeMillis();
         InitialTaskResponse result = new InitialTaskResponse();
         result.setSuccess(false);
-        if (!lock2.tryLock()) {
-            return result;
-        }
+
+        lock2.lock();
         try {
 
 
@@ -214,6 +210,7 @@ public class ConsensusImpl implements Consensus {
             if(node.received.get(key)==null){
                 node.received.put(key, node.logicClock);
                 node.startTime.put(key, receiveTime);
+                node.sentAdd.put(key,request.getLogEntry().getSentAdd());
             }
 
             if(node.extraM.get(key)==null){

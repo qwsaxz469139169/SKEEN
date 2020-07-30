@@ -46,7 +46,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
     public static Map<String,Long> stamped = new ConcurrentHashMap();
 
-    public static Map<String,Long> latency = new ConcurrentHashMap();
+    public static Map<String,String> sentAdd = new ConcurrentHashMap();
 
     public static Map<String,List<Long>> lcMap= new ConcurrentHashMap();
 
@@ -122,7 +122,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             PeerNode peer = new PeerNode(s);
             nodes.addPeer(peer);
             
-            if (s.equals("100.70.49.128:" + config.getSelfPort())) {
+            if (s.equals("localhost:" + config.getSelfPort())) {
                 nodes.setSelf(peer);
             }
         }
@@ -156,6 +156,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
         long ts = logicClock;
         received.put(request.getKey(), ts);
+        sentAdd.put(request.getKey(),nodes.getSelf().getAddress());
         extraM.put(request.getKey(),new AtomicInteger(0));
         latency_temp.put(request.getKey(),new CopyOnWriteArrayList<>());
 
@@ -172,6 +173,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         logEntry.setMessage(request.getKey());
         logEntry.setLogic_clock(logicClock);
         logEntry.setStartTime(receiveTime);
+        logEntry.setSentAdd(nodes.getSelf().getAddress());
 
 
 //        logModule.write(logEntry);

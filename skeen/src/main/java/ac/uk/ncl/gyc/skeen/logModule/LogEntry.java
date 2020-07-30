@@ -13,6 +13,7 @@ public class LogEntry implements Serializable, Comparable {
 
     private String message;
 
+    private String sentAdd;
     private String initialNode;
 
     private int extraMessages;
@@ -20,6 +21,14 @@ public class LogEntry implements Serializable, Comparable {
     private Command command;
 
     public LogEntry() {
+    }
+
+    public String getSentAdd() {
+        return sentAdd;
+    }
+
+    public void setSentAdd(String sentAdd) {
+        this.sentAdd = sentAdd;
     }
 
     public int getExtraMessages() {
