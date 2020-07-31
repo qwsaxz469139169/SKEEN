@@ -66,6 +66,8 @@ public class SkeenRpcServerImpl implements SkeenRpcServer {
             return new Response(node.handlerClientRequest((ClientRequest) request.getObj(),receiveTime));
         }else if (request.getCmd() == Request.REQ_INI_TASK) {
             return new Response(node.handlerInitialTask((InitialTaskRequest) request.getObj()));
+        }else if (request.getCmd() == Request.REQ_GET) {
+            return new Response(node.handlerGet((ClientRequest) request.getObj()));
         }
         return null;
     }

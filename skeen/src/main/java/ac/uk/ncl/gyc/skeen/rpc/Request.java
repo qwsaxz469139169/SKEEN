@@ -10,6 +10,7 @@ public class Request<T> implements Serializable {
     public static final int REQ_REDICT= 1;
     public static final int REQ_SEND_LC = 2;
     public static final int REQ_INI_TASK = 3;
+    public static final int REQ_GET = 4;
 
 
     /** 请求类型 */

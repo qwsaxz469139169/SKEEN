@@ -10,6 +10,7 @@ public class LogEntry implements Serializable, Comparable {
     private Long logic_clock;
 
     private Long startTime;
+    private Long latency;
 
     private String message;
 
@@ -25,6 +26,14 @@ public class LogEntry implements Serializable, Comparable {
 
     public String getSentAdd() {
         return sentAdd;
+    }
+
+    public Long getLatency() {
+        return latency;
+    }
+
+    public void setLatency(Long latency) {
+        this.latency = latency;
     }
 
     public void setSentAdd(String sentAdd) {

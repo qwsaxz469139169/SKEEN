@@ -1,13 +1,17 @@
 package ac.uk.ncl.gyc.skeen.logModule;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -99,11 +103,31 @@ public class LogModuleImpl implements LogModule {
             if (result == null) {
                 return null;
             }
+
             return JSON.parseObject(result, LogEntry.class);
         } catch (RocksDBException e) {
             LOGGER.warn(e.getMessage(), e);
         }
         return null;
+    }
+    @Override
+    public List<String> readAll() {
+        List<String> logEntries = new ArrayList<>();
+
+        RocksIterator iter = logDb.newIterator();
+        int i = 0;
+        for (iter.seekToFirst(); iter.isValid(); iter.next()) {
+
+            byte[] result = iter.value();
+            String s =new String(result);
+            if(i==0){
+                System.out.println(s);
+            }
+
+            logEntries.add(s);
+            i++;
+        }
+        return logEntries;
     }
 
     @Override

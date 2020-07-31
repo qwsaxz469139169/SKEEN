@@ -39,16 +39,16 @@ public class SkeenClient {
     private static  AtomicLong receiveCount = new AtomicLong(0);
     private static AtomicInteger m_index = new AtomicInteger(0);
 
-    private static final int clientNum = 3;
+    private static final int clientNum = 1;
     private static final int runtime= 620;
     private static final int c = 1;
-    private static final int delay= 13;
-    private static final int endcount= 3000;
+    private static final int delay= 67;
+    private static final int endcount= 50;
     private static final int arriveRate = 30;
-    private static final String arriveRateNum = "0.75";
+    private static final String arriveRateNum = "test";
 
-//    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.49.226:8777");
+    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
+    //static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.49.226:8777");
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
 
@@ -61,6 +61,33 @@ static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.
 
         while(true){
     if(m_index.get()>endcount){
+
+        for(int i = 0; i<3;i++){
+            ClientRequest obj = new ClientRequest();
+            String add = nodeList.get(i);
+            try {
+                Request<ClientRequest> r = new Request<>();
+                r.setObj(obj);
+                r.setUrl(add);
+                r.setCmd(Request.REQ_GET);
+
+                Response<GetResponse> response;
+                response = client.send(r);
+                if (response.getResult() != null) {
+                    for (Message message : response.getResult().getMessages()) {
+                        messages.add(message);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(0);
+            }
+
+        }
+
+
+
+
         String s = JSON.toJSONString(messages);
         FileWriter fw = null;
         File f = new File("D:/"+arriveRateNum+"_case"+c+"Skeen"+clientNum+".txt");
@@ -103,16 +130,18 @@ static class MyTask implements Runnable{
         try {
             response = client.send(r);
             ClientResponse clientResponse = response.getResult();
+            System.out.println("message: " + obj.key + " has been sent. " );
+
             if(response.getResult().getLatency()!=null){
                 System.out.println("message: " + obj.key + ", latency: " + response.getResult().getLatency() + ", extraM: " + response.getResult().getExtraMessage());
 
-                Message message1 = new Message(obj.key, 6, response.getResult().getLatency());
-                messages.add(message1);
+//                Message message1 = new Message(obj.key, response.getResult().getLatency());
+//                messages.add(message1);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            String s = JSON.toJSONString(messages);
+/*            String s = JSON.toJSONString(messages);
             FileWriter fw = null;
             File f = new File("D:/"+arriveRateNum+"_case"+c+"Skeen"+clientNum+".txt");
             try {
@@ -127,7 +156,7 @@ static class MyTask implements Runnable{
                 e1.printStackTrace();
             }
             System.out.println("end");
-            System.exit(0);
+            System.exit(0);*/
         }
     }
 }

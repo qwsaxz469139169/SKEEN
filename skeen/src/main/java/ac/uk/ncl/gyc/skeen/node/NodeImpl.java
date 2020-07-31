@@ -8,9 +8,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import ac.uk.ncl.gyc.skeen.StateMachine.StateMachine;
 import ac.uk.ncl.gyc.skeen.StateMachine.StateMachineImpl;
+import ac.uk.ncl.gyc.skeen.client.GetResponse;
+import ac.uk.ncl.gyc.skeen.client.Message;
 import ac.uk.ncl.gyc.skeen.consensus.Consensus;
 import ac.uk.ncl.gyc.skeen.consensus.ConsensusImpl;
 import ac.uk.ncl.gyc.skeen.entity.*;
+import ac.uk.ncl.gyc.skeen.logModule.Command;
 import ac.uk.ncl.gyc.skeen.logModule.LogEntry;
 import ac.uk.ncl.gyc.skeen.logModule.LogModule;
 import ac.uk.ncl.gyc.skeen.logModule.LogModuleImpl;
@@ -18,6 +21,8 @@ import ac.uk.ncl.gyc.skeen.mysql.DBdriver;
 import ac.uk.ncl.gyc.skeen.rpc.SkeenRpcClient;
 import ac.uk.ncl.gyc.skeen.rpc.SkeenRpcClientImpl;
 import ac.uk.ncl.gyc.skeen.rpc.Request;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.common.profile.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +43,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
     public volatile long logicClock = 0;
 
-    public static Map<String,AtomicInteger> extraM = new ConcurrentHashMap();
 
     public static Map<String,Long> received = new ConcurrentHashMap();
 
@@ -49,8 +53,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
     public static Map<String,String> sentAdd = new ConcurrentHashMap();
 
     public static Map<String,List<Long>> lcMap= new ConcurrentHashMap();
-
-    public static Map<String,List<Long>> latency_temp = new ConcurrentHashMap();
 
 
     public static ConcurrentHashMap<String,Integer> ack = new ConcurrentHashMap();
@@ -82,7 +84,47 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         return DefaultNodeLazyHolder.INSTANCE;
     }
 
+    public GetResponse handlerGet(ClientRequest request) {
+        GetResponse response = new GetResponse();
+        List<String> logEntries = logModule.readAll();
 
+        List<Message> messages = new ArrayList<>();
+        int f = 0;
+        for(String s: logEntries){
+            Message message = new Message();
+            int lflag = s.indexOf("latency");
+
+            lflag = lflag+9;
+            int mflag = s.indexOf("key");
+            mflag = mflag+6;
+            String l = "";
+            String n = "";
+            for(int i =lflag ; i<s.length();i++){
+                String ss = String.valueOf(s.charAt(i));
+                if(ss.equals(",")){
+                    break;
+                }
+                l = l+ss;
+            }
+
+            for(int i =mflag ; i<s.length();i++){
+                String ss = String.valueOf(s.charAt(i));
+                if(ss.equals("\"")){
+                    break;
+                }
+                n = n+ss;
+            }
+
+
+            message.setMessage(n);
+            message.setLatency(l);
+            messages.add(message);
+
+        }
+        response.setMessages(messages);
+        return response;
+
+    }
 
 
     private static class DefaultNodeLazyHolder {
@@ -157,8 +199,9 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         long ts = logicClock;
         received.put(request.getKey(), ts);
         sentAdd.put(request.getKey(),nodes.getSelf().getAddress());
-        extraM.put(request.getKey(),new AtomicInteger(0));
-        latency_temp.put(request.getKey(),new CopyOnWriteArrayList<>());
+        startTime.put(request.getKey(),receiveTime);
+
+        ack.put(request.getKey(),0);
 
         List<Long> lcList = new CopyOnWriteArrayList<>();
         lcList.add(logicClock);
@@ -174,6 +217,10 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         logEntry.setLogic_clock(logicClock);
         logEntry.setStartTime(receiveTime);
         logEntry.setSentAdd(nodes.getSelf().getAddress());
+        logEntry.setCommand(Command.newBuilder().
+                key(request.getKey()).
+                value(request.getValue()).
+                build());
 
 
 //        logModule.write(logEntry);
@@ -218,35 +265,36 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         if (success.get()==count) {
             System.out.println("Receive success! Response Client.");
 
-            List<Long> maxList = lcMap.get(request.getKey());
-            long snM = 0;
-            for (int i = 0; i<maxList.size();i++){
-                if(maxList.get(i)>snM){
-                    snM = maxList.get(i);
-                }
-            }
-            stamped.put(request.getKey(),snM);
-            received.remove(request.getKey());
-            lcMap.remove(request.getKey());
-
-            logModule.write(logEntry);
-            stamped.remove(request.getKey());
-
-            long _latency = System.currentTimeMillis()- logEntry.getStartTime();
-            System.out.println("latency la: ."+_latency);
-            for(long la:latency_temp.get(request.getKey())){
-                System.out.println("latency la: ."+la);
-                _latency=_latency+la;
-            }
-
-            _latency= _latency/3;
-
-            logicClock++;
+//            List<Long> maxList = lcMap.get(request.getKey());
+//            long snM = 0;
+//            for (int i = 0; i<maxList.size();i++){
+//                if(maxList.get(i)>snM){
+//                    snM = maxList.get(i);
+//                }
+//            }
+//            stamped.put(request.getKey(),snM);
+//            received.remove(request.getKey());
+//            lcMap.remove(request.getKey());
+//
+//            logModule.write(logEntry);
+//            stamped.remove(request.getKey());
+//
+//            long _latency = System.currentTimeMillis()- logEntry.getStartTime();
+//            System.out.println("latency la: ."+_latency);
+//            for(long la:latency_temp.get(request.getKey())){
+//                System.out.println("latency la: ."+la);
+//                _latency=_latency+la;
+//            }
+//
+//            _latency= _latency/3;
+//
+//            logicClock++;
             ClientResponse clientResponse = new ClientResponse(true);
-            clientResponse.setExtraMessage(extraM.get(request.getKey()).get());
-            extraM.remove(request.getKey());
-            clientResponse.setLatency(_latency);
-            latency_temp.remove(request.getKey());
+//            clientResponse.setExtraMessage(extraM.get(request.getKey()).get());
+//            extraM.remove(request.getKey());
+//            clientResponse.setLatency(_latency);
+//            latency_temp.remove(request.getKey());
+
             // 返回成功.
             return clientResponse;
         } else {
@@ -295,9 +343,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                     try {
                         Response response = SKEEN_RPC_CLIENT.send(request);
 
-                        AtomicInteger em = extraM.get(logEntry.getMessage());
-                        em.incrementAndGet();
-                        extraM.put(logEntry.getMessage(),em);
 
                         System.out.println("Current node send ack to other node : "+peer.getAddress());
 
@@ -309,26 +354,6 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                         LcSendResponse result = (LcSendResponse) response.getResult();
                         if (result != null && result.isSuccess()) {
                             LOGGER.info("send to "+peer.getAddress()+" successful");
-
-//                            receive event lc = max+1
-                            if(result.getLogicClock()>logicClock){
-                                logicClock = result.getLogicClock()+1;
-                            }else {
-                                logicClock = logicClock+1;
-                            }
-
-//                            System.out.println(logEntry.getMessage()+" "+result.getLatency());
-                            List<Long> lcList = lcMap.get(logEntry.getMessage());
-                            lcList.add(result.getLogicClock());
-                            lcMap.put(logEntry.getMessage(),lcList);
-
-                            List<Long> laList = latency_temp.get(logEntry.getMessage());
-                            laList.add(result.getLatency());
-                            latency_temp.put(logEntry.getMessage(),laList);
-
-                            AtomicInteger e =  extraM.get(logEntry.getMessage());
-                            e.addAndGet(result.getExtraM());
-                            extraM.put(logEntry.getMessage(),e);
 
 
                             return true;
