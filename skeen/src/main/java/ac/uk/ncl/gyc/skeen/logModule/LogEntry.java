@@ -1,6 +1,9 @@
 package ac.uk.ncl.gyc.skeen.logModule;
 
+import ac.uk.ncl.gyc.skeen.entity.PiggybackingLog;
+
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 public class LogEntry implements Serializable, Comparable {
@@ -19,9 +22,19 @@ public class LogEntry implements Serializable, Comparable {
 
     private int extraMessages;
 
+    private List<PiggybackingLog> bunchingLogs;
+
     private Command command;
 
     public LogEntry() {
+    }
+
+    public List<PiggybackingLog> getBunchingLogs() {
+        return bunchingLogs;
+    }
+
+    public void setBunchingLogs(List<PiggybackingLog> bunchingLogs) {
+        this.bunchingLogs = bunchingLogs;
     }
 
     public String getSentAdd() {

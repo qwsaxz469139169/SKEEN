@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import ac.uk.ncl.gyc.skeen.StateMachine.StateMachine;
 import ac.uk.ncl.gyc.skeen.StateMachine.StateMachineImpl;
@@ -42,6 +43,14 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
  	/* ============ Base ============= */
 
     public volatile long logicClock = 0;
+
+    public volatile long cur_index = 0;
+
+    public static long SYSTEM_START_TIME = System.currentTimeMillis();
+
+    public static AtomicLong LAXT_INDEX = new AtomicLong(0);
+
+    public static Map<Long, CopyOnWriteArrayList<PiggybackingLog>> REQUEST_LIST = new ConcurrentHashMap();
 
 
     public static Map<String,Long> received = new ConcurrentHashMap();
@@ -207,6 +216,71 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         lcList.add(logicClock);
         lcMap.put(request.getKey(),lcList);
 
+        PiggybackingLog piggybackingLog = new PiggybackingLog();
+        piggybackingLog.setMessage(request.getKey());
+        piggybackingLog.setStartTime(receiveTime);
+
+
+        long RUN_TIME = receiveTime - SYSTEM_START_TIME;
+        long req_index = RUN_TIME / 2;
+
+        System.out.println("cur_time" + req_index);
+
+
+        CopyOnWriteArrayList<PiggybackingLog> req_list = null;
+        PiggybackingLog firstPiggy = null;
+//lock.lock();
+//try{
+        if (REQUEST_LIST.get(req_index) != null) {
+            System.out.println("cur_req" + request.getKey() + " is  not first p");
+            req_list = REQUEST_LIST.get(req_index);
+            req_list.add(piggybackingLog);
+            REQUEST_LIST.put(req_index, req_list);
+        } else {
+            System.out.println("cur_req" + request.getKey() + " is first p          req_index" + req_index);
+            piggybackingLog.setFirstIndex(true);
+            req_list = new CopyOnWriteArrayList();
+            req_list.add(piggybackingLog);
+            REQUEST_LIST.put(req_index, req_list);
+        }
+
+        System.out.println("last_index   " + LAXT_INDEX.get());
+//        System.out.println("last_index   " + cur_index );
+
+
+        if (req_index <= LAXT_INDEX.get()) {
+            System.out.println("return 1111111 size");
+            return ClientResponse.ok();
+        }
+
+        long last_index = LAXT_INDEX.get();
+
+        LAXT_INDEX.getAndSet(req_index);
+        if (last_index == 0) {
+            System.out.println("return 3333333 size");
+
+//        cur_index = req_index;
+            return ClientResponse.ok();
+        }
+
+        if (REQUEST_LIST.get(last_index) == null) {
+            System.out.println("return 2222222 size");
+            return ClientResponse.ok();
+        } else {
+            req_list = REQUEST_LIST.get(last_index);
+        }
+
+        REQUEST_LIST.remove(last_index);
+
+        System.out.println("req_list size" + req_list.size());
+        for (PiggybackingLog p : req_list) {
+            if (p.isFirstIndex()) {
+                firstPiggy = p;
+            }
+        }
+
+        System.out.println("FIST PPP " + firstPiggy.getMessage());
+
 
 
 
@@ -222,6 +296,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                 value(request.getValue()).
                 build());
 
+        logEntry.setBunchingLogs(req_list);
 
 //        logModule.write(logEntry);
 //        System.out.println("Current precommit to log module.");
@@ -235,6 +310,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         final AtomicInteger success = new AtomicInteger(0);
 
         List<Future<Boolean>> futureList = new CopyOnWriteArrayList<>();
+
 
         int count = 0;
 

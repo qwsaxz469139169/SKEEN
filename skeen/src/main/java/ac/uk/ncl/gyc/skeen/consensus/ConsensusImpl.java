@@ -10,6 +10,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import ac.uk.ncl.gyc.skeen.entity.*;
+import ac.uk.ncl.gyc.skeen.logModule.Command;
 import ac.uk.ncl.gyc.skeen.logModule.LogEntry;
 import ac.uk.ncl.gyc.skeen.node.NodeImpl;
 import ac.uk.ncl.gyc.skeen.node.PeerNode;
@@ -17,6 +18,7 @@ import ac.uk.ncl.gyc.skeen.rpc.Request;
 import ac.uk.ncl.gyc.skeen.rpc.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.rmi.runtime.Log;
 
 public class ConsensusImpl implements Consensus {
 
@@ -49,7 +51,7 @@ public class ConsensusImpl implements Consensus {
 
             long ts = lcSendRequest.getTs();
             LogEntry logEntry = lcSendRequest.getLogEntry();
-            String key = logEntry.getMessage();
+            List<PiggybackingLog> bunchingLogs = logEntry.getBunchingLogs();
 
             node.logicClock = node.logicClock + 1;
 
@@ -57,41 +59,51 @@ public class ConsensusImpl implements Consensus {
                 node.logicClock = ts;
             }
 
-            if(node.received.get(key)==null){
-                System.out.println("First receive message: " + key);
-                node.received.put(key, node.logicClock);
-                node.startTime.put(key, receiveTime);
-                node.sentAdd.put(key,logEntry.getSentAdd());
-                node.ack.put(key,1);
+            for(PiggybackingLog log :bunchingLogs){
+                String key = log.getMessage();
 
-                List<Long> lcList = new CopyOnWriteArrayList<>();
-                lcList.add(node.logicClock);
-                lcList.add(lcSendRequest.getTs());
-                node.lcMap.put(key, lcList);
-            }else {
-                int ack_count = node.ack.get(key);
-                ack_count = ack_count+1;
-                node.ack.put(key,ack_count);
-                System.out.println("second receive message: " + key);
+                if(node.received.get(key)==null){
+                    System.out.println("First receive message: " + key);
+                    node.received.put(key, node.logicClock);
+                    node.startTime.put(key, receiveTime);
+                    node.sentAdd.put(key,logEntry.getSentAdd());
+                    node.ack.put(key,1);
 
-                List<Long> lcList = node.lcMap.get(key);
-                lcList.add(lcSendRequest.getTs());
-                node.lcMap.put(key, lcList);
-            }
+                    List<Long> lcList = new CopyOnWriteArrayList<>();
+                    lcList.add(node.logicClock);
+                    lcList.add(lcSendRequest.getTs());
+                    node.lcMap.put(key, lcList);
+                }else {
+                    int ack_count = node.ack.get(key);
+                    ack_count = ack_count+1;
+                    node.ack.put(key,ack_count);
+                    System.out.println("second receive message: " + key);
 
-            if(node.ack.get(key)>=2){
-                System.out.println(key+ " have been commited!");
-                long latency = System.currentTimeMillis() - node.startTime.get(key);
-                if(node.sentAdd.get(key).equals(node.nodes.getSelf().getAddress())){
-                    logEntry.setLatency(latency);
-                    node.logModule.write(logEntry);
+                    List<Long> lcList = node.lcMap.get(key);
+                    lcList.add(lcSendRequest.getTs());
+                    node.lcMap.put(key, lcList);
                 }
-                node.received.remove(key);
-                node.startTime.remove(key);
-                node.sentAdd.remove(key);
-                node.ack.remove(key);
-                node.lcMap.remove(key);
+
+                if(node.ack.get(key)>=2){
+                    System.out.println(key+ " have been commited!");
+                    long latency = System.currentTimeMillis() - node.startTime.get(key);
+                    if(node.sentAdd.get(key).equals(node.nodes.getSelf().getAddress())){
+                        LogEntry le = new LogEntry();
+                        le.setLatency(latency);
+                        le.setMessage(key);
+                        le.setCommand(Command.newBuilder().key(key).value("").build());
+
+                        node.logModule.write(le);
+                    }
+                    node.received.remove(key);
+                    node.startTime.remove(key);
+                    node.sentAdd.remove(key);
+                    node.ack.remove(key);
+                    node.lcMap.remove(key);
+                }
             }
+
+
 
                 //如果是初始节点发过来的消息，需要请求其他节点的承认
                 System.out.println("初始节点： "+logEntry.getInitialNode());
@@ -109,7 +121,7 @@ public class ConsensusImpl implements Consensus {
 
 
                         initialTaskRequest.setTs(node.logicClock);
-                        initialTaskRequest.setMessage(key);
+                        initialTaskRequest.setMessage(logEntry.getMessage());
 
 
                         Request request = new Request();
@@ -147,48 +159,63 @@ public class ConsensusImpl implements Consensus {
 
         lock2.lock();
         try {
+            long ts = request.getTs();
+            node.logicClock = node.logicClock + 1;
 
+            if (ts > node.logicClock) {
 
-            String key = request.getMessage();
-
-            if(node.received.get(key)==null){
-                System.out.println("First receive message: " + key);
-                node.received.put(key, node.logicClock);
-                node.startTime.put(key, receiveTime);
-                node.sentAdd.put(key,request.getLogEntry().getSentAdd());
-                node.ack.put(key,1);
-
-                List<Long> lcList = new CopyOnWriteArrayList<>();
-                lcList.add(node.logicClock);
-                lcList.add(request.getTs());
-                node.lcMap.put(key, lcList);
-            }else {
-                int ack_count = node.ack.get(key);
-                ack_count = ack_count+1;
-                node.ack.put(key,ack_count);
-                System.out.println("second receive message: " + key);
-
-                List<Long> lcList = node.lcMap.get(key);
-                lcList.add(request.getTs());
-                node.lcMap.put(key, lcList);
+                node.logicClock = ts;
             }
+            List<PiggybackingLog> bunchingLogs = request.getLogEntry().getBunchingLogs();
+            for(PiggybackingLog log :bunchingLogs) {
+                String key = log.getMessage();
 
-            if(node.ack.get(key)>=2){
-                System.out.println(key+ " have been commited!");
-                long latency = System.currentTimeMillis() - node.startTime.get(key);
-                if(node.sentAdd.get(key).equals(node.nodes.getSelf().getAddress())){
-                    LogEntry logEntry = request.getLogEntry();
-                    logEntry.setLatency(latency);
-                    node.logModule.write(logEntry);
+                if(node.received.get(key)==null){
+                    System.out.println("First receive message: " + key);
+                    node.received.put(key, node.logicClock);
+                    node.startTime.put(key, receiveTime);
+                    node.sentAdd.put(key,request.getLogEntry().getSentAdd());
+                    node.ack.put(key,1);
+
+                    List<Long> lcList = new CopyOnWriteArrayList<>();
+                    lcList.add(node.logicClock);
+                    lcList.add(request.getTs());
+                    node.lcMap.put(key, lcList);
+                }else {
+                    int ack_count = node.ack.get(key);
+                    ack_count = ack_count+1;
+                    node.ack.put(key,ack_count);
+                    System.out.println("second receive message: " + key);
+
+                    List<Long> lcList = node.lcMap.get(key);
+                    lcList.add(request.getTs());
+                    node.lcMap.put(key, lcList);
                 }
-                node.received.remove(key);
-                node.startTime.remove(key);
-                node.sentAdd.remove(key);
-                node.ack.remove(key);
-                node.lcMap.remove(key);
+
+                if(node.ack.get(key)>=2){
+                    System.out.println(key+ " have been commited!");
+                    long latency = System.currentTimeMillis() - node.startTime.get(key);
+                    if(node.sentAdd.get(key).equals(node.nodes.getSelf().getAddress())){
+                        LogEntry le = new LogEntry();
+                        le.setLatency(latency);
+                        le.setMessage(key);
+                        le.setCommand(Command.newBuilder().key(key).value("").build());
+
+                        node.logModule.write(le);
+                    }
+                    node.received.remove(key);
+                    node.startTime.remove(key);
+                    node.sentAdd.remove(key);
+                    node.ack.remove(key);
+                    node.lcMap.remove(key);
+                }
+                System.out.println("receive ack: "+key+"     "+request.getServerId());
             }
 
-            System.out.println("receive ack: "+key+"     "+request.getServerId());
+
+
+
+
             result.setSuccess(true);
 
         }finally {
