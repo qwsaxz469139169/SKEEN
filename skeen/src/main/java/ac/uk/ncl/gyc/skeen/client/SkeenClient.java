@@ -47,8 +47,8 @@ public class SkeenClient {
     private static final int arriveRate = 30;
     private static final String arriveRateNum = "test2";
 
-    static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
-    //static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.49.226:8777");
+    //static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
+    static List<String> nodeList = Lists.newArrayList("100.70.48.36:8775", "100.70.49.21:8776", "100.70.49.86:8777");
     public static void main(String[] args) throws RemotingException, InterruptedException {
        main0();
 
