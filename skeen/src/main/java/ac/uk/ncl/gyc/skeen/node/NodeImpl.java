@@ -165,7 +165,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
             PeerNode peer = new PeerNode(s);
             nodes.addPeer(peer);
             
-            if (s.equals("localhost:" + config.getSelfPort())) {
+            if (s.equals("100.70.48.36:" + config.getSelfPort())) {
                 nodes.setSelf(peer);
             }
         }
