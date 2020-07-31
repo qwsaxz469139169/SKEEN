@@ -78,6 +78,7 @@ public class SkeenClient {
                         messages.add(message);
                     }
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(0);
