@@ -10,6 +10,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import ac.uk.ncl.gyc.skeen.entity.*;
+import ac.uk.ncl.gyc.skeen.logModule.Command;
 import ac.uk.ncl.gyc.skeen.logModule.LogEntry;
 import ac.uk.ncl.gyc.skeen.node.NodeImpl;
 import ac.uk.ncl.gyc.skeen.node.PeerNode;
@@ -68,6 +69,8 @@ public class ConsensusImpl implements Consensus {
                 lcList.add(node.logicClock);
                 lcList.add(lcSendRequest.getTs());
                 node.lcMap.put(key, lcList);
+
+                node.pending.add(key);
             }else {
                 int ack_count = node.ack.get(key);
                 ack_count = ack_count+1;
@@ -79,57 +82,49 @@ public class ConsensusImpl implements Consensus {
                 node.lcMap.put(key, lcList);
             }
 
-            if(node.ack.get(key)>=2){
-                System.out.println(key+ " have been commited!");
-                long latency = System.currentTimeMillis() - node.startTime.get(key);
-                if(node.sentAdd.get(key).equals(node.nodes.getSelf().getAddress())){
-                    logEntry.setLatency(latency);
-                    node.logModule.write(logEntry);
+            for(String pendingName : lcSendRequest.getLogEntry().getPendings()){
+                if(node.received.get(pendingName)==null){
+                    System.out.println("First receive message: " + pendingName);
+                    node.received.put(pendingName, node.logicClock);
+                    node.startTime.put(pendingName, receiveTime);
+                    node.sentAdd.put(pendingName,logEntry.getSentAdd());
+                    node.ack.put(pendingName,1);
+
+                    List<Long> lcList = new CopyOnWriteArrayList<>();
+                    lcList.add(node.logicClock);
+                    lcList.add(lcSendRequest.getTs());
+                    node.lcMap.put(pendingName, lcList);
+
+                    node.pending.add(pendingName);
+                }else {
+                    int ack_count = node.ack.get(pendingName);
+                    ack_count = ack_count+1;
+                    node.ack.put(pendingName,ack_count);
+                    System.out.println("second receive message: " + pendingName);
+
+                    List<Long> lcList = node.lcMap.get(pendingName);
+                    lcList.add(lcSendRequest.getTs());
+                    node.lcMap.put(pendingName, lcList);
                 }
-                node.received.remove(key);
-                node.startTime.remove(key);
-                node.sentAdd.remove(key);
-                node.ack.remove(key);
-                node.lcMap.remove(key);
+
+                if(node.ack.get(pendingName)>=2){
+                    System.out.println(pendingName+ " have been commited!");
+                    long latency = System.currentTimeMillis() - node.startTime.get(pendingName);
+                    if(node.sentAdd.get(pendingName).equals(node.nodes.getSelf().getAddress())){
+                        LogEntry le = new LogEntry();
+                        le.setLatency(latency);
+                        le.setMessage(pendingName);
+                        le.setCommand(Command.newBuilder().value("").key(pendingName).build());
+                        node.logModule.write(le);
+                    }
+                    node.received.remove(pendingName);
+                    node.startTime.remove(pendingName);
+                    node.sentAdd.remove(pendingName);
+                    node.ack.remove(pendingName);
+                    node.lcMap.remove(pendingName);
+                }
             }
 
-                //如果是初始节点发过来的消息，需要请求其他节点的承认
-                System.out.println("初始节点： "+logEntry.getInitialNode());
-                System.out.println("lcSendRequest.getServerId()： "+lcSendRequest.getServerId());
-
-
-                    String add = "";
-                    for (PeerNode peer : node.nodes.getPeersWithOutSelf()) {
-                        // TODO check self and CCSkeenThreadPool
-                        // 并行发起 RPC 复制
-
-                        InitialTaskRequest initialTaskRequest = new InitialTaskRequest();
-                        initialTaskRequest.setServerId(node.nodes.getSelf().getAddress());
-                        initialTaskRequest.setLogEntry(logEntry);
-
-
-                        initialTaskRequest.setTs(node.logicClock);
-                        initialTaskRequest.setMessage(key);
-
-
-                        Request request = new Request();
-                        request.setCmd(Request.REQ_INI_TASK);
-                        request.setObj(initialTaskRequest);
-                        request.setUrl(peer.getAddress());
-
-
-                        Response response = node.SKEEN_RPC_CLIENT.send(request);
-
-                        System.out.println("Current node send ack to other node : " + add);
-
-                        InitialTaskResponse lcResponse = (InitialTaskResponse) response.getResult();
-                        if (lcResponse != null && lcResponse.isSuccess()) {
-                            LOGGER.info("send to " + peer.getAddress() + " successful");
-
-                        }
-
-                    }
-            node.logicClock = node.logicClock + 1;
 
             result.setSuccess(true);
             return result;

@@ -1,6 +1,7 @@
 package ac.uk.ncl.gyc.skeen.logModule;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 public class LogEntry implements Serializable, Comparable {
@@ -17,11 +18,21 @@ public class LogEntry implements Serializable, Comparable {
     private String sentAdd;
     private String initialNode;
 
+    private List<String> pendings;
+
     private int extraMessages;
 
     private Command command;
 
     public LogEntry() {
+    }
+
+    public List<String> getPendings() {
+        return pendings;
+    }
+
+    public void setPendings(List<String> pendings) {
+        this.pendings = pendings;
     }
 
     public String getSentAdd() {

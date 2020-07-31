@@ -54,6 +54,7 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
 
     public static Map<String,List<Long>> lcMap= new ConcurrentHashMap();
 
+    public static List<String> pending = new CopyOnWriteArrayList<>();
 
     public static ConcurrentHashMap<String,Integer> ack = new ConcurrentHashMap();
 
@@ -208,6 +209,20 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
         lcMap.put(request.getKey(),lcList);
 
 
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("cur request ack size:" +pending.size());
+        List<String> ackList = new ArrayList<>();
+        if(pending.size()>0){
+
+            for(String mName: pending){
+                ackList.add(mName);
+                pending.remove(mName);
+            }
+        }
 
 
         // 预提交到本地日志, TODO 预提交
@@ -221,6 +236,8 @@ public class NodeImpl<T> implements Node<T>, LifeCycle {
                 key(request.getKey()).
                 value(request.getValue()).
                 build());
+
+        logEntry.setPendings(ackList);
 
 
 //        logModule.write(logEntry);

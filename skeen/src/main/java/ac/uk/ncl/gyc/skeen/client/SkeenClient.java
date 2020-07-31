@@ -41,11 +41,11 @@ public class SkeenClient {
 
     private static final int clientNum = 1;
     private static final int runtime= 620;
-    private static final int c = 1;
+    private static final int c = 3;
     private static final int delay= 67;
-    private static final int endcount= 50;
+    private static final int endcount= 100;
     private static final int arriveRate = 30;
-    private static final String arriveRateNum = "test";
+    private static final String arriveRateNum = "test3";
 
     static List<String> nodeList = Lists.newArrayList("localhost:8775", "localhost:8776", "localhost:8777");
     //static List<String> nodeList = Lists.newArrayList("100.70.49.128:8775", "100.70.49.85:8776", "100.70.49.226:8777");
